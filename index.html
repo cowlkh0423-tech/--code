@@ -1,0 +1,1824 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+
+<title>CODE : 죽림고수</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #020603;
+    font-family: Georgia, serif;
+}
+
+canvas {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: 100vh;
+    display: block;
+}
+
+#hud {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 5;
+}
+
+#title {
+    position: absolute;
+    left: 25px;
+    top: 20px;
+    color: rgba(225,195,100,.8);
+    font-size: 16px;
+    letter-spacing: 6px;
+}
+
+#heart {
+    position: absolute;
+    left: 50%;
+    top: 17px;
+    transform: translateX(-50%);
+    color: #dfc46c;
+    font-size: 26px;
+    text-shadow: 0 0 15px rgba(230,195,80,.5);
+}
+
+#time {
+    position: absolute;
+    right: 25px;
+    top: 20px;
+    color: rgba(235,220,180,.8);
+    font-family: monospace;
+    font-size: 16px;
+}
+
+.screen {
+    position: fixed;
+    z-index: 20;
+
+    left: 50%;
+    top: 50%;
+
+    transform: translate(-50%, -50%);
+
+    width: min(500px, 88vw);
+
+    padding: 45px 30px;
+
+    text-align: center;
+
+    background:
+        rgba(3, 12, 7, .95);
+
+    border:
+        1px solid
+        rgba(220,190,90,.35);
+
+    box-shadow:
+        0 20px 70px rgba(0,0,0,.8);
+
+    backdrop-filter: blur(10px);
+}
+
+.hidden {
+    display: none !important;
+}
+
+.small-title {
+    color: rgba(220,190,100,.65);
+    font-size: 10px;
+    letter-spacing: 5px;
+    margin-bottom: 12px;
+}
+
+h1 {
+    color: #dfc36d;
+    font-size: clamp(55px, 13vw, 100px);
+    letter-spacing: 10px;
+}
+
+h2 {
+    margin-top: 10px;
+    color: #ddd3ad;
+    font-weight: normal;
+    letter-spacing: 7px;
+}
+
+.info {
+    margin-top: 25px;
+    color: rgba(235,235,215,.7);
+    font-size: 14px;
+    line-height: 1.9;
+}
+
+.controls {
+    margin-top: 15px;
+    color: rgba(220,195,120,.7);
+    font-family: monospace;
+    font-size: 12px;
+}
+
+button {
+    position: relative;
+    z-index: 50;
+
+    margin-top: 28px;
+
+    padding: 14px 38px;
+
+    background:
+        rgba(210,175,75,.06);
+
+    border:
+        1px solid
+        rgba(220,190,100,.55);
+
+    color: #e4c96f;
+
+    font-family: Georgia, serif;
+
+    font-size: 14px;
+
+    letter-spacing: 3px;
+
+    cursor: pointer;
+
+    pointer-events: auto;
+
+    touch-action: manipulation;
+}
+
+button:hover {
+    background:
+        rgba(220,180,70,.15);
+}
+
+.result-label {
+    margin-top: 25px;
+    color: rgba(220,210,175,.5);
+    font-size: 10px;
+    letter-spacing: 4px;
+}
+
+#finalTime {
+    margin-top: 6px;
+    color: #e4c96f;
+    font-family: monospace;
+    font-size: 38px;
+}
+
+#bestTime {
+    margin-top: 5px;
+    color: rgba(230,210,145,.65);
+    font-family: monospace;
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="game"></canvas>
+
+<div id="hud">
+    <div id="title">CODE</div>
+    <div id="heart">♥</div>
+    <div id="time">0.00</div>
+</div>
+
+<!-- 시작 화면 -->
+<div id="startScreen" class="screen">
+
+    <div class="small-title">
+        BAMBOO SURVIVAL
+    </div>
+
+    <h1>CODE</h1>
+
+    <h2>죽림고수</h2>
+
+    <div class="info">
+        죽림을 가르는 화살을 피해<br>
+        최대한 오래 살아남아라.
+    </div>
+
+    <div class="controls">
+        WASD / 방향키 이동
+    </div>
+
+    <button id="startButton" type="button">
+        GAME START
+    </button>
+
+</div>
+
+
+<!-- 게임오버 -->
+<div id="gameOverScreen"
+     class="screen hidden">
+
+    <div class="small-title">
+        SURVIVAL ENDED
+    </div>
+
+    <h2>GAME OVER</h2>
+
+    <div class="result-label">
+        SURVIVAL TIME
+    </div>
+
+    <div id="finalTime">
+        0.00
+    </div>
+
+    <div class="result-label">
+        BEST RECORD
+    </div>
+
+    <div id="bestTime">
+        0.00
+    </div>
+
+    <button id="restartButton" type="button">
+        RESTART
+    </button>
+
+    <div class="controls">
+        R 키로 재시작
+    </div>
+
+</div>
+
+
+<script>
+
+/* =========================================================
+   CANVAS
+========================================================= */
+
+const canvas =
+    document.getElementById("game");
+
+const ctx =
+    canvas.getContext("2d");
+
+
+function resize() {
+
+    canvas.width =
+        window.innerWidth;
+
+    canvas.height =
+        window.innerHeight;
+
+    if (!game.running) {
+        draw();
+    }
+}
+
+
+window.addEventListener(
+    "resize",
+    resize
+);
+
+
+/* =========================================================
+   UI
+========================================================= */
+
+const startScreen =
+    document.getElementById(
+        "startScreen"
+    );
+
+const gameOverScreen =
+    document.getElementById(
+        "gameOverScreen"
+    );
+
+const startButton =
+    document.getElementById(
+        "startButton"
+    );
+
+const restartButton =
+    document.getElementById(
+        "restartButton"
+    );
+
+const timeText =
+    document.getElementById(
+        "time"
+    );
+
+const finalTime =
+    document.getElementById(
+        "finalTime"
+    );
+
+const bestTime =
+    document.getElementById(
+        "bestTime"
+    );
+
+
+/* =========================================================
+   GAME
+========================================================= */
+
+const game = {
+
+    running: false,
+
+    startTime: 0,
+
+    lastTime: 0,
+
+    elapsed: 0,
+
+    arrowTimer: 0,
+
+    arrows: [],
+
+    flash: 0
+
+};
+
+
+/* =========================================================
+   키보드
+========================================================= */
+
+const keys = {};
+
+window.addEventListener(
+    "keydown",
+    function(e) {
+
+        const key =
+            e.key.toLowerCase();
+
+        keys[key] = true;
+
+        if (
+            key === "arrowup" ||
+            key === "arrowdown" ||
+            key === "arrowleft" ||
+            key === "arrowright"
+        ) {
+            e.preventDefault();
+        }
+
+        if (
+            key === "r" &&
+            !game.running
+        ) {
+            startGame();
+        }
+    }
+);
+
+window.addEventListener(
+    "keyup",
+    function(e) {
+
+        keys[
+            e.key.toLowerCase()
+        ] = false;
+
+    }
+);
+
+
+/* =========================================================
+   PLAYER
+========================================================= */
+
+const player = {
+
+    x: 0,
+
+    y: 0,
+
+    radius: 14,
+
+    speed: 340,
+
+
+    reset() {
+
+        this.x =
+            canvas.width / 2;
+
+        this.y =
+            canvas.height / 2;
+
+    },
+
+
+    update(dt) {
+
+        let dx = 0;
+        let dy = 0;
+
+        if (
+            keys["w"] ||
+            keys["arrowup"]
+        ) {
+            dy--;
+        }
+
+        if (
+            keys["s"] ||
+            keys["arrowdown"]
+        ) {
+            dy++;
+        }
+
+        if (
+            keys["a"] ||
+            keys["arrowleft"]
+        ) {
+            dx--;
+        }
+
+        if (
+            keys["d"] ||
+            keys["arrowright"]
+        ) {
+            dx++;
+        }
+
+        if (
+            dx !== 0 ||
+            dy !== 0
+        ) {
+
+            const length =
+                Math.sqrt(
+                    dx * dx +
+                    dy * dy
+                );
+
+            dx /= length;
+            dy /= length;
+        }
+
+        this.x +=
+            dx *
+            this.speed *
+            dt;
+
+        this.y +=
+            dy *
+            this.speed *
+            dt;
+
+        this.x =
+            Math.max(
+                this.radius,
+                Math.min(
+                    canvas.width -
+                    this.radius,
+                    this.x
+                )
+            );
+
+        this.y =
+            Math.max(
+                this.radius,
+                Math.min(
+                    canvas.height -
+                    this.radius,
+                    this.y
+                )
+            );
+    },
+
+
+    draw() {
+
+        ctx.save();
+
+        ctx.translate(
+            this.x,
+            this.y
+        );
+
+        /* 그림자 */
+
+        ctx.beginPath();
+
+        ctx.ellipse(
+            0,
+            13,
+            12,
+            4,
+            0,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.fillStyle =
+            "rgba(0,0,0,.6)";
+
+        ctx.fill();
+
+
+        /* 몸 */
+
+        ctx.fillStyle =
+            "#3e4b3d";
+
+        ctx.beginPath();
+
+        ctx.moveTo(-7,-2);
+        ctx.lineTo(-8,10);
+        ctx.lineTo(0,15);
+        ctx.lineTo(8,10);
+        ctx.lineTo(7,-2);
+
+        ctx.closePath();
+
+        ctx.fill();
+
+
+        /* 팔 */
+
+        ctx.strokeStyle =
+            "#596553";
+
+        ctx.lineWidth = 4;
+
+        ctx.lineCap = "round";
+
+        ctx.beginPath();
+
+        ctx.moveTo(-5,0);
+        ctx.lineTo(-13,8);
+
+        ctx.stroke();
+
+        ctx.beginPath();
+
+        ctx.moveTo(5,0);
+        ctx.lineTo(13,8);
+
+        ctx.stroke();
+
+
+        /* 머리 */
+
+        ctx.beginPath();
+
+        ctx.arc(
+            0,
+            -9,
+            6.5,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.fillStyle =
+            "#c39a6b";
+
+        ctx.fill();
+
+
+        /* 머리 */
+
+        ctx.beginPath();
+
+        ctx.arc(
+            0,
+            -11,
+            7,
+            Math.PI,
+            Math.PI * 2
+        );
+
+        ctx.fillStyle =
+            "#10130e";
+
+        ctx.fill();
+
+
+        /* 머리 묶음 */
+
+        ctx.beginPath();
+
+        ctx.moveTo(-3,-15);
+        ctx.lineTo(1,-21);
+        ctx.lineTo(4,-15);
+
+        ctx.closePath();
+
+        ctx.fillStyle =
+            "#0b0e0b";
+
+        ctx.fill();
+
+
+        /* 허리띠 */
+
+        ctx.fillStyle =
+            "#c3a04a";
+
+        ctx.fillRect(
+            -7,
+            3,
+            14,
+            2
+        );
+
+
+        /* 다리 */
+
+        ctx.strokeStyle =
+            "#242d25";
+
+        ctx.lineWidth = 4;
+
+        ctx.beginPath();
+
+        ctx.moveTo(-3,10);
+        ctx.lineTo(-5,16);
+
+        ctx.stroke();
+
+        ctx.beginPath();
+
+        ctx.moveTo(3,10);
+        ctx.lineTo(5,16);
+
+        ctx.stroke();
+
+
+        ctx.restore();
+    }
+};
+
+
+/* =========================================================
+   화살 속도
+   ★ 3초마다 +65
+========================================================= */
+
+function getArrowSpeed() {
+
+    const level =
+        Math.floor(
+            game.elapsed / 3
+        );
+
+    return 560 + level * 65;
+}
+
+
+/* =========================================================
+   화살 생성 간격
+   ★ 3초마다 감소
+========================================================= */
+
+function getArrowInterval() {
+
+    const level =
+        Math.floor(
+            game.elapsed / 3
+        );
+
+    return Math.max(
+        0.12,
+        0.70 -
+        level * 0.06
+    );
+}
+
+
+/* =========================================================
+   ARROW
+========================================================= */
+
+class Arrow {
+
+    constructor(
+        x,
+        y,
+        angle
+    ) {
+
+        this.x = x;
+
+        this.y = y;
+
+        this.angle = angle;
+
+        this.speed =
+            getArrowSpeed();
+
+        this.active = true;
+    }
+
+
+    update(dt) {
+
+        this.x +=
+            Math.cos(
+                this.angle
+            ) *
+            this.speed *
+            dt;
+
+        this.y +=
+            Math.sin(
+                this.angle
+            ) *
+            this.speed *
+            dt;
+    }
+
+
+    outside() {
+
+        return (
+            this.x < -150 ||
+            this.x >
+                canvas.width + 150 ||
+            this.y < -150 ||
+            this.y >
+                canvas.height + 150
+        );
+    }
+
+
+    collision() {
+
+        const tipX =
+            this.x +
+            Math.cos(
+                this.angle
+            ) * 55;
+
+        const tipY =
+            this.y +
+            Math.sin(
+                this.angle
+            ) * 55;
+
+        const dx =
+            tipX -
+            player.x;
+
+        const dy =
+            tipY -
+            player.y;
+
+        return (
+            dx * dx +
+            dy * dy
+        ) <
+        29 * 29;
+    }
+
+
+    draw() {
+
+        ctx.save();
+
+        ctx.translate(
+            this.x,
+            this.y
+        );
+
+        ctx.rotate(
+            this.angle
+        );
+
+
+        /* 화살대 */
+
+        const shaft =
+            ctx.createLinearGradient(
+                -60,
+                0,
+                40,
+                0
+            );
+
+        shaft.addColorStop(
+            0,
+            "#634515"
+        );
+
+        shaft.addColorStop(
+            .45,
+            "#d4ad4f"
+        );
+
+        shaft.addColorStop(
+            .7,
+            "#f6df91"
+        );
+
+        shaft.addColorStop(
+            1,
+            "#7c571b"
+        );
+
+        ctx.fillStyle =
+            shaft;
+
+        ctx.fillRect(
+            -60,
+            -2,
+            105,
+            4
+        );
+
+
+        /* 날카로운 촉 */
+
+        ctx.shadowColor =
+            "rgba(255,220,100,.8)";
+
+        ctx.shadowBlur = 12;
+
+        ctx.beginPath();
+
+        ctx.moveTo(65,0);
+        ctx.lineTo(25,-9);
+        ctx.lineTo(31,-2);
+        ctx.lineTo(20,0);
+        ctx.lineTo(31,2);
+        ctx.lineTo(25,9);
+
+        ctx.closePath();
+
+        const head =
+            ctx.createLinearGradient(
+                20,
+                -8,
+                65,
+                8
+            );
+
+        head.addColorStop(
+            0,
+            "#fff3a8"
+        );
+
+        head.addColorStop(
+            .5,
+            "#d7b453"
+        );
+
+        head.addColorStop(
+            1,
+            "#fff5b9"
+        );
+
+        ctx.fillStyle =
+            head;
+
+        ctx.fill();
+
+
+        /* 꼬리 */
+
+        ctx.shadowBlur = 0;
+
+        ctx.beginPath();
+
+        ctx.moveTo(-58,0);
+        ctx.lineTo(-73,-9);
+        ctx.lineTo(-66,0);
+        ctx.lineTo(-73,9);
+
+        ctx.closePath();
+
+        ctx.fillStyle =
+            "#765a23";
+
+        ctx.fill();
+
+
+        ctx.restore();
+    }
+}
+
+
+/* =========================================================
+   화살 생성
+========================================================= */
+
+function spawnArrow(
+    x,
+    y,
+    angle
+) {
+
+    game.arrows.push(
+        new Arrow(
+            x,
+            y,
+            angle
+        )
+    );
+}
+
+
+function edge() {
+
+    const side =
+        Math.floor(
+            Math.random() * 4
+        );
+
+    const m = 100;
+
+    if (side === 0) {
+        return {
+            x:
+                Math.random() *
+                canvas.width,
+            y: -m
+        };
+    }
+
+    if (side === 1) {
+        return {
+            x:
+                canvas.width + m,
+            y:
+                Math.random() *
+                canvas.height
+        };
+    }
+
+    if (side === 2) {
+        return {
+            x:
+                Math.random() *
+                canvas.width,
+            y:
+                canvas.height + m
+        };
+    }
+
+    return {
+        x: -m,
+        y:
+            Math.random() *
+            canvas.height
+    };
+}
+
+
+function aim(
+    x,
+    y
+) {
+
+    return Math.atan2(
+        player.y - y,
+        player.x - x
+    );
+}
+
+
+/* =========================================================
+   패턴
+========================================================= */
+
+function single() {
+
+    const p = edge();
+
+    spawnArrow(
+        p.x,
+        p.y,
+        aim(p.x,p.y)
+    );
+}
+
+
+function line() {
+
+    const speed =
+        getArrowSpeed();
+
+    const side =
+        Math.floor(
+            Math.random() * 4
+        );
+
+    const count = 4;
+    const gap = 115;
+
+    for (
+        let i = 0;
+        i < count;
+        i++
+    ) {
+
+        if (side === 0) {
+
+            spawnArrow(
+                canvas.width / 2 +
+                (i - 1.5) * gap,
+                -100,
+                Math.PI / 2
+            );
+
+        }
+
+        else if (side === 1) {
+
+            spawnArrow(
+                canvas.width + 100,
+                canvas.height / 2 +
+                (i - 1.5) * gap,
+                Math.PI
+            );
+
+        }
+
+        else if (side === 2) {
+
+            spawnArrow(
+                canvas.width / 2 +
+                (i - 1.5) * gap,
+                canvas.height + 100,
+                -Math.PI / 2
+            );
+
+        }
+
+        else {
+
+            spawnArrow(
+                -100,
+                canvas.height / 2 +
+                (i - 1.5) * gap,
+                0
+            );
+        }
+    }
+}
+
+
+function diagonal() {
+
+    const m = 100;
+
+    const s =
+        Math.floor(
+            Math.random() * 4
+        );
+
+    if (s === 0)
+        spawnArrow(
+            -m,-m,
+            Math.PI/4
+        );
+
+    if (s === 1)
+        spawnArrow(
+            canvas.width+m,-m,
+            3*Math.PI/4
+        );
+
+    if (s === 2)
+        spawnArrow(
+            canvas.width+m,
+            canvas.height+m,
+            5*Math.PI/4
+        );
+
+    if (s === 3)
+        spawnArrow(
+            -m,
+            canvas.height+m,
+            7*Math.PI/4
+        );
+}
+
+
+function fan() {
+
+    const p =
+        edge();
+
+    const base =
+        aim(p.x,p.y);
+
+    for (
+        let i = -2;
+        i <= 2;
+        i++
+    ) {
+
+        spawnArrow(
+            p.x,
+            p.y,
+            base + i * 0.09
+        );
+    }
+}
+
+
+function opposite() {
+
+    const y =
+        100 +
+        Math.random() *
+        (canvas.height - 200);
+
+    spawnArrow(
+        -100,
+        y,
+        0
+    );
+
+    spawnArrow(
+        canvas.width + 100,
+        y,
+        Math.PI
+    );
+}
+
+
+function cross() {
+
+    const m = 100;
+
+    spawnArrow(
+        -m,-m,
+        Math.PI/4
+    );
+
+    spawnArrow(
+        canvas.width+m,-m,
+        3*Math.PI/4
+    );
+
+    spawnArrow(
+        canvas.width+m,
+        canvas.height+m,
+        5*Math.PI/4
+    );
+
+    spawnArrow(
+        -m,
+        canvas.height+m,
+        7*Math.PI/4
+    );
+}
+
+
+function burst() {
+
+    for (
+        let i = 0;
+        i < 6;
+        i++
+    ) {
+
+        const p = edge();
+
+        spawnArrow(
+            p.x,
+            p.y,
+            aim(p.x,p.y)
+        );
+    }
+}
+
+
+/* =========================================================
+   패턴 선택
+========================================================= */
+
+function createPattern() {
+
+    const t =
+        game.elapsed;
+
+    if (t < 3) {
+
+        single();
+
+        return;
+    }
+
+    if (t < 6) {
+
+        const list = [
+            single,
+            line,
+            diagonal
+        ];
+
+        list[
+            Math.floor(
+                Math.random() *
+                list.length
+            )
+        ]();
+
+        return;
+    }
+
+    if (t < 12) {
+
+        const list = [
+            line,
+            diagonal,
+            fan,
+            opposite
+        ];
+
+        list[
+            Math.floor(
+                Math.random() *
+                list.length
+            )
+        ]();
+
+        return;
+    }
+
+    const list = [
+        single,
+        line,
+        diagonal,
+        fan,
+        opposite,
+        cross,
+        burst
+    ];
+
+    list[
+        Math.floor(
+            Math.random() *
+            list.length
+        )
+    ]();
+}
+
+
+/* =========================================================
+   배경
+========================================================= */
+
+function drawBackground() {
+
+    const w =
+        canvas.width;
+
+    const h =
+        canvas.height;
+
+
+    const bg =
+        ctx.createLinearGradient(
+            0,0,
+            0,h
+        );
+
+    bg.addColorStop(
+        0,
+        "#020906"
+    );
+
+    bg.addColorStop(
+        .5,
+        "#0b2817"
+    );
+
+    bg.addColorStop(
+        1,
+        "#010402"
+    );
+
+    ctx.fillStyle = bg;
+
+    ctx.fillRect(
+        0,0,w,h
+    );
+
+
+    /* 먼 대나무 */
+
+    bambooLayer(
+        110,
+        .35,
+        .35
+    );
+
+    bambooLayer(
+        80,
+        .65,
+        .55
+    );
+
+    bambooLayer(
+        55,
+        1,
+        .9
+    );
+
+
+    /* CODE */
+
+    ctx.save();
+
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    ctx.font =
+        "bold " +
+        Math.min(
+            w * .17,
+            180
+        ) +
+        "px Georgia";
+
+    ctx.fillStyle =
+        "rgba(230,190,70,.055)";
+
+    ctx.shadowColor =
+        "rgba(220,180,60,.2)";
+
+    ctx.shadowBlur = 45;
+
+    ctx.fillText(
+        "CODE",
+        w/2,
+        h/2
+    );
+
+    ctx.restore();
+
+
+    /* 비네팅 */
+
+    const v =
+        ctx.createRadialGradient(
+            w/2,
+            h/2,
+            h*.15,
+            w/2,
+            h/2,
+            Math.max(w,h)*.75
+        );
+
+    v.addColorStop(
+        0,
+        "rgba(0,0,0,0)"
+    );
+
+    v.addColorStop(
+        1,
+        "rgba(0,0,0,.6)"
+    );
+
+    ctx.fillStyle = v;
+
+    ctx.fillRect(
+        0,0,w,h
+    );
+}
+
+
+function bambooLayer(
+    spacing,
+    scale,
+    alpha
+) {
+
+    const w =
+        canvas.width;
+
+    const h =
+        canvas.height;
+
+    for (
+        let i = -2;
+        i < w/spacing + 3;
+        i++
+    ) {
+
+        const x =
+            i * spacing;
+
+        const height =
+            h * (
+                .65 +
+                (
+                    Math.sin(i*2.1)+1
+                )*.15
+            );
+
+        const width =
+            10 * scale;
+
+
+        ctx.save();
+
+        ctx.translate(
+            x,
+            h
+        );
+
+        ctx.rotate(
+            Math.sin(i*1.7)*.04
+        );
+
+
+        ctx.fillStyle =
+            `rgba(
+                35,
+                80,
+                38,
+                ${alpha}
+            )`;
+
+        ctx.fillRect(
+            -width/2,
+            -height,
+            width,
+            height
+        );
+
+
+        /* 마디 */
+
+        ctx.fillStyle =
+            `rgba(
+                5,
+                25,
+                10,
+                ${alpha}
+            )`;
+
+        for (
+            let y = -45;
+            y > -height;
+            y -= 55
+        ) {
+
+            ctx.fillRect(
+                -width/2-2,
+                y,
+                width+4,
+                4
+            );
+        }
+
+        ctx.restore();
+    }
+}
+
+
+/* =========================================================
+   UPDATE
+========================================================= */
+
+function update(dt) {
+
+    game.elapsed =
+        (
+            performance.now() -
+            game.startTime
+        ) / 1000;
+
+
+    player.update(dt);
+
+
+    game.arrowTimer -= dt;
+
+
+    if (
+        game.arrowTimer <= 0
+    ) {
+
+        createPattern();
+
+        game.arrowTimer =
+            getArrowInterval();
+    }
+
+
+    for (
+        const arrow
+        of game.arrows
+    ) {
+
+        arrow.update(dt);
+
+        if (
+            arrow.collision()
+        ) {
+
+            game.flash = .2;
+
+            gameOver();
+
+            return;
+        }
+    }
+
+
+    game.arrows =
+        game.arrows.filter(
+            arrow =>
+                !arrow.outside()
+        );
+
+
+    if (
+        game.flash > 0
+    ) {
+
+        game.flash -=
+            dt * 2;
+    }
+}
+
+
+/* =========================================================
+   DRAW
+========================================================= */
+
+function draw() {
+
+    drawBackground();
+
+
+    for (
+        const arrow
+        of game.arrows
+    ) {
+
+        arrow.draw();
+    }
+
+
+    player.draw();
+
+
+    if (
+        game.flash > 0
+    ) {
+
+        ctx.fillStyle =
+            `rgba(
+                255,
+                220,
+                100,
+                ${game.flash}
+            )`;
+
+        ctx.fillRect(
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
+    }
+
+
+    timeText.textContent =
+        game.elapsed.toFixed(2);
+}
+
+
+/* =========================================================
+   ★ 게임 시작
+========================================================= */
+
+function startGame() {
+
+    console.log(
+        "GAME START"
+    );
+
+
+    game.running = true;
+
+    game.elapsed = 0;
+
+    game.arrows = [];
+
+    game.arrowTimer = .5;
+
+    game.startTime =
+        performance.now();
+
+    game.lastTime =
+        performance.now();
+
+    game.flash = 0;
+
+
+    player.reset();
+
+
+    startScreen
+        .classList
+        .add("hidden");
+
+
+    gameOverScreen
+        .classList
+        .add("hidden");
+
+
+    requestAnimationFrame(
+        gameLoop
+    );
+}
+
+
+/* =========================================================
+   GAME OVER
+========================================================= */
+
+function gameOver() {
+
+    game.running = false;
+
+
+    let best =
+        Number(
+            localStorage.getItem(
+                "code_best"
+            )
+        ) || 0;
+
+
+    if (
+        game.elapsed > best
+    ) {
+
+        best =
+            game.elapsed;
+
+        localStorage.setItem(
+            "code_best",
+            best
+        );
+    }
+
+
+    finalTime.textContent =
+        game.elapsed.toFixed(2);
+
+    bestTime.textContent =
+        best.toFixed(2);
+
+
+    gameOverScreen
+        .classList
+        .remove("hidden");
+}
+
+
+/* =========================================================
+   GAME LOOP
+========================================================= */
+
+function gameLoop(now) {
+
+    if (
+        !game.running
+    ) {
+        return;
+    }
+
+
+    const dt =
+        Math.min(
+            (now -
+                game.lastTime) /
+            1000,
+            .05
+        );
+
+
+    game.lastTime = now;
+
+
+    update(dt);
+
+    draw();
+
+
+    if (
+        game.running
+    ) {
+
+        requestAnimationFrame(
+            gameLoop
+        );
+    }
+}
+
+
+/* =========================================================
+   ★ 버튼 이벤트
+========================================================= */
+
+/*
+ * click뿐만 아니라 pointerdown도 사용.
+ * iPad/모바일 브라우저에서도 작동하도록 함.
+ */
+
+startButton.addEventListener(
+    "pointerdown",
+    function(e) {
+
+        e.preventDefault();
+
+        startGame();
+
+    }
+);
+
+
+restartButton.addEventListener(
+    "pointerdown",
+    function(e) {
+
+        e.preventDefault();
+
+        startGame();
+
+    }
+);
+
+
+/*
+ * 혹시 pointerdown이 막히는 브라우저를
+ * 위한 click 백업
+ */
+
+startButton.addEventListener(
+    "click",
+    function(e) {
+
+        e.preventDefault();
+
+        if (!game.running) {
+            startGame();
+        }
+
+    }
+);
+
+
+restartButton.addEventListener(
+    "click",
+    function(e) {
+
+        e.preventDefault();
+
+        if (!game.running) {
+            startGame();
+        }
+
+    }
+);
+
+
+/* =========================================================
+   초기 실행
+========================================================= */
+
+resize();
+
+player.reset();
+
+draw();
+
+</script>
+
+</body>
+</html>
