@@ -2074,7 +2074,14 @@ function createPattern() {
 ========================================================= */
 
 function patternInterval() {
-
+      const level = 
+            math.floor(game.elapsed / 3);
+      return Math.max(
+            0.12,
+            0.70 - level * 0.06
+      );
+}
+                  
     if (
         game.elapsed < 3
     ) {
