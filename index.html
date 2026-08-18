@@ -1,0 +1,3889 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>CODE : 죽림고수</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #020704;
+
+    font-family:
+        Georgia,
+        "Noto Serif KR",
+        serif;
+}
+
+canvas {
+    display: block;
+
+    width: 100vw;
+    height: 100vh;
+}
+
+
+/* =========================================================
+   HUD
+========================================================= */
+
+#hud {
+
+    position: fixed;
+
+    inset: 0;
+
+    pointer-events: none;
+
+    z-index: 10;
+}
+
+
+#title {
+
+    position: absolute;
+
+    top: 22px;
+    left: 28px;
+
+    color:
+        rgba(221, 190, 88, 0.78);
+
+    font-size: 17px;
+
+    letter-spacing: 7px;
+}
+
+
+#heart {
+
+    position: absolute;
+
+    top: 17px;
+    left: 50%;
+
+    transform:
+        translateX(-50%);
+
+    color: #e1c46a;
+
+    font-size: 27px;
+
+    text-shadow:
+        0 0 8px
+        rgba(224, 193, 90, 0.7),
+
+        0 0 22px
+        rgba(224, 193, 90, 0.25);
+}
+
+
+#time {
+
+    position: absolute;
+
+    top: 22px;
+    right: 28px;
+
+    color:
+        rgba(235, 220, 175, 0.78);
+
+    font-family: monospace;
+
+    font-size: 16px;
+
+    letter-spacing: 1px;
+}
+
+
+/* =========================================================
+   화면
+========================================================= */
+
+.screen {
+
+    position: fixed;
+
+    left: 50%;
+    top: 50%;
+
+    transform:
+        translate(-50%, -50%);
+
+    width:
+        min(500px, 88vw);
+
+    padding:
+        44px 30px;
+
+    text-align: center;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(2, 13, 8, 0.94),
+            rgba(3, 8, 5, 0.91)
+        );
+
+    border:
+        1px solid
+        rgba(220, 188, 88, 0.28);
+
+    box-shadow:
+        0 25px 80px
+        rgba(0, 0, 0, 0.75),
+
+        inset 0 0 50px
+        rgba(150, 120, 40, 0.025);
+
+    backdrop-filter:
+        blur(12px);
+
+    z-index: 30;
+}
+
+
+.hidden {
+    display: none !important;
+}
+
+
+.small-title {
+
+    color:
+        rgba(220, 190, 100, 0.62);
+
+    font-size: 10px;
+
+    letter-spacing: 5px;
+
+    margin-bottom: 12px;
+}
+
+
+h1 {
+
+    color: #dfc36d;
+
+    font-size:
+        clamp(54px, 13vw, 100px);
+
+    line-height: 1;
+
+    letter-spacing: 12px;
+
+    text-shadow:
+        0 0 25px
+        rgba(215, 175, 70, 0.18);
+}
+
+
+h2 {
+
+    margin-top: 12px;
+
+    color: #e1d6aa;
+
+    font-size: 21px;
+
+    font-weight: normal;
+
+    letter-spacing: 8px;
+}
+
+
+.info {
+
+    margin-top: 26px;
+
+    color:
+        rgba(230, 230, 210, 0.68);
+
+    font-size: 14px;
+
+    line-height: 1.9;
+}
+
+
+.controls {
+
+    margin-top: 17px;
+
+    color:
+        rgba(220, 195, 120, 0.62);
+
+    font-family: monospace;
+
+    font-size: 12px;
+
+    letter-spacing: 1.5px;
+}
+
+
+button {
+
+    margin-top: 28px;
+
+    padding:
+        13px 34px;
+
+    background:
+        rgba(210, 175, 75, 0.045);
+
+    border:
+        1px solid
+        rgba(220, 190, 100, 0.5);
+
+    color: #e2c66d;
+
+    font-family:
+        Georgia,
+        serif;
+
+    letter-spacing: 3px;
+
+    cursor: pointer;
+
+    transition:
+        background .2s,
+        box-shadow .2s;
+}
+
+
+button:hover {
+
+    background:
+        rgba(220, 180, 70, 0.13);
+
+    box-shadow:
+        0 0 25px
+        rgba(220, 180, 70, 0.13);
+}
+
+
+.result-label {
+
+    margin-top: 25px;
+
+    color:
+        rgba(220, 210, 175, 0.5);
+
+    font-size: 10px;
+
+    letter-spacing: 4px;
+}
+
+
+#finalTime {
+
+    margin-top: 6px;
+
+    color: #e4c96f;
+
+    font-family: monospace;
+
+    font-size: 38px;
+}
+
+
+#bestTime {
+
+    margin-top: 5px;
+
+    color:
+        rgba(230, 210, 145, 0.62);
+
+    font-family: monospace;
+
+    font-size: 14px;
+}
+
+</style>
+</head>
+
+
+<body>
+
+
+<canvas id="game"></canvas>
+
+
+<!-- =======================================================
+     HUD
+======================================================= -->
+
+<div id="hud">
+
+    <div id="title">
+        CODE
+    </div>
+
+    <div id="heart">
+        ♥
+    </div>
+
+    <div id="time">
+        0.00
+    </div>
+
+</div>
+
+
+<!-- =======================================================
+     시작 화면
+======================================================= -->
+
+<div id="startScreen" class="screen">
+
+    <div class="small-title">
+        BAMBOO SURVIVAL
+    </div>
+
+    <h1>
+        CODE
+    </h1>
+
+    <h2>
+        죽림고수
+    </h2>
+
+    <div class="info">
+
+        죽림을 가르는 화살을 피해<br>
+
+        최대한 오래 살아남아라.
+
+    </div>
+
+    <div class="controls">
+
+        WASD / 방향키 이동
+
+    </div>
+
+    <button id="startButton">
+
+        GAME START
+
+    </button>
+
+</div>
+
+
+<!-- =======================================================
+     게임오버
+======================================================= -->
+
+<div id="gameOverScreen"
+     class="screen hidden">
+
+    <div class="small-title">
+
+        SURVIVAL ENDED
+
+    </div>
+
+    <h2>
+
+        GAME OVER
+
+    </h2>
+
+    <div class="result-label">
+
+        SURVIVAL TIME
+
+    </div>
+
+    <div id="finalTime">
+
+        0.00
+
+    </div>
+
+    <div class="result-label">
+
+        BEST RECORD
+
+    </div>
+
+    <div id="bestTime">
+
+        0.00
+
+    </div>
+
+    <button id="restartButton">
+
+        RESTART
+
+    </button>
+
+    <div class="controls">
+
+        R 키로 재시작
+
+    </div>
+
+</div>
+
+
+<script>
+
+"use strict";
+
+
+/* =========================================================
+   CANVAS
+========================================================= */
+
+const canvas =
+    document.getElementById("game");
+
+
+const ctx =
+    canvas.getContext("2d");
+
+
+function resize() {
+
+    canvas.width =
+        window.innerWidth;
+
+    canvas.height =
+        window.innerHeight;
+
+}
+
+
+window.addEventListener(
+    "resize",
+    resize
+);
+
+
+resize();
+
+
+/* =========================================================
+   UI
+========================================================= */
+
+const startScreen =
+    document.getElementById(
+        "startScreen"
+    );
+
+
+const gameOverScreen =
+    document.getElementById(
+        "gameOverScreen"
+    );
+
+
+const startButton =
+    document.getElementById(
+        "startButton"
+    );
+
+
+const restartButton =
+    document.getElementById(
+        "restartButton"
+    );
+
+
+const timeText =
+    document.getElementById(
+        "time"
+    );
+
+
+const finalTime =
+    document.getElementById(
+        "finalTime"
+    );
+
+
+const bestTime =
+    document.getElementById(
+        "bestTime"
+    );
+
+
+/* =========================================================
+   키보드
+========================================================= */
+
+const keys = {};
+
+
+window.addEventListener(
+    "keydown",
+    function(e) {
+
+        const key =
+            e.key.toLowerCase();
+
+
+        keys[key] = true;
+
+
+        if (
+
+            key === "arrowup" ||
+
+            key === "arrowdown" ||
+
+            key === "arrowleft" ||
+
+            key === "arrowright" ||
+
+            key === " "
+
+        ) {
+
+            e.preventDefault();
+
+        }
+
+
+        if (
+
+            key === "r" &&
+
+            !game.running
+
+        ) {
+
+            startGame();
+
+        }
+
+    }
+);
+
+
+window.addEventListener(
+    "keyup",
+    function(e) {
+
+        keys[
+            e.key.toLowerCase()
+        ] = false;
+
+    }
+);
+
+
+/* =========================================================
+   게임 상태
+========================================================= */
+
+const game = {
+
+    running: false,
+
+    startTime: 0,
+
+    lastTime: 0,
+
+    elapsed: 0,
+
+    arrowTimer: 0,
+
+    arrows: [],
+
+    flash: 0
+
+};
+
+
+/* =========================================================
+   최고 기록
+========================================================= */
+
+let bestRecord =
+
+    Number(
+        localStorage.getItem(
+            "code_bamboo_best"
+        )
+    ) || 0;
+
+
+/* =========================================================
+   플레이어
+========================================================= */
+
+const player = {
+
+    x: 0,
+
+    y: 0,
+
+    radius: 14,
+
+    speed: 345,
+
+
+    reset() {
+
+        this.x =
+            canvas.width / 2;
+
+        this.y =
+            canvas.height / 2;
+
+    },
+
+
+    update(dt) {
+
+        let dx = 0;
+
+        let dy = 0;
+
+
+        if (
+
+            keys["w"] ||
+
+            keys["arrowup"]
+
+        ) {
+
+            dy -= 1;
+
+        }
+
+
+        if (
+
+            keys["s"] ||
+
+            keys["arrowdown"]
+
+        ) {
+
+            dy += 1;
+
+        }
+
+
+        if (
+
+            keys["a"] ||
+
+            keys["arrowleft"]
+
+        ) {
+
+            dx -= 1;
+
+        }
+
+
+        if (
+
+            keys["d"] ||
+
+            keys["arrowright"]
+
+        ) {
+
+            dx += 1;
+
+        }
+
+
+        if (
+
+            dx !== 0 ||
+
+            dy !== 0
+
+        ) {
+
+            const length =
+
+                Math.sqrt(
+                    dx * dx +
+                    dy * dy
+                );
+
+
+            dx /= length;
+
+            dy /= length;
+
+        }
+
+
+        this.x +=
+
+            dx *
+            this.speed *
+            dt;
+
+
+        this.y +=
+
+            dy *
+            this.speed *
+            dt;
+
+
+        this.x =
+
+            Math.max(
+
+                this.radius,
+
+                Math.min(
+
+                    canvas.width -
+                    this.radius,
+
+                    this.x
+
+                )
+
+            );
+
+
+        this.y =
+
+            Math.max(
+
+                this.radius,
+
+                Math.min(
+
+                    canvas.height -
+                    this.radius,
+
+                    this.y
+
+                )
+
+            );
+
+    },
+
+
+    draw() {
+
+        ctx.save();
+
+
+        ctx.translate(
+
+            this.x,
+
+            this.y
+
+        );
+
+
+        /* 그림자 */
+
+        ctx.beginPath();
+
+        ctx.ellipse(
+
+            0,
+
+            12,
+
+            11,
+
+            4,
+
+            0,
+
+            0,
+
+            Math.PI * 2
+
+        );
+
+
+        ctx.fillStyle =
+
+            "rgba(0,0,0,.55)";
+
+
+        ctx.fill();
+
+
+        /* 캐릭터 빛 */
+
+        ctx.shadowColor =
+
+            "rgba(222,191,91,.35)";
+
+
+        ctx.shadowBlur = 10;
+
+
+        /* 몸 */
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+
+            -6,
+
+            -2
+
+        );
+
+
+        ctx.lineTo(
+
+            -8,
+
+            11
+
+        );
+
+
+        ctx.lineTo(
+
+            0,
+
+            15
+
+        );
+
+
+        ctx.lineTo(
+
+            8,
+
+            11
+
+        );
+
+
+        ctx.lineTo(
+
+            6,
+
+            -2
+
+        );
+
+
+        ctx.closePath();
+
+
+        const robe =
+
+            ctx.createLinearGradient(
+
+                -8,
+
+                0,
+
+                8,
+
+                0
+
+            );
+
+
+        robe.addColorStop(
+
+            0,
+
+            "#182019"
+
+        );
+
+
+        robe.addColorStop(
+
+            .5,
+
+            "#66705b"
+
+        );
+
+
+        robe.addColorStop(
+
+            1,
+
+            "#141b15"
+
+        );
+
+
+        ctx.fillStyle = robe;
+
+        ctx.fill();
+
+
+        /* 팔 */
+
+        ctx.lineWidth = 4;
+
+        ctx.lineCap = "round";
+
+        ctx.strokeStyle =
+
+            "#4f5949";
+
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+
+            -5,
+
+            0
+
+        );
+
+
+        ctx.lineTo(
+
+            -13,
+
+            8
+
+        );
+
+
+        ctx.stroke();
+
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+
+            5,
+
+            0
+
+        );
+
+
+        ctx.lineTo(
+
+            13,
+
+            8
+
+        );
+
+
+        ctx.stroke();
+
+
+        /* 머리 */
+
+        ctx.shadowBlur = 0;
+
+
+        ctx.beginPath();
+
+        ctx.arc(
+
+            0,
+
+            -9,
+
+            6.5,
+
+            0,
+
+            Math.PI * 2
+
+        );
+
+
+        ctx.fillStyle =
+
+            "#c49d70";
+
+
+        ctx.fill();
+
+
+        /* 머리카락 */
+
+        ctx.beginPath();
+
+        ctx.arc(
+
+            0,
+
+            -11,
+
+            7,
+
+            Math.PI,
+
+            Math.PI * 2
+
+        );
+
+
+        ctx.fillStyle =
+
+            "#10130f";
+
+
+        ctx.fill();
+
+
+        /* 머리 묶음 */
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+
+            -3,
+
+            -15
+
+        );
+
+
+        ctx.lineTo(
+
+            1,
+
+            -21
+
+        );
+
+
+        ctx.lineTo(
+
+            4,
+
+            -15
+
+        );
+
+
+        ctx.closePath();
+
+
+        ctx.fillStyle =
+
+            "#0c100d";
+
+
+        ctx.fill();
+
+
+        /* 허리띠 */
+
+        ctx.fillStyle =
+
+            "#c4a14b";
+
+
+        ctx.fillRect(
+
+            -7,
+
+            3,
+
+            14,
+
+            2
+
+        );
+
+
+        /* 다리 */
+
+        ctx.strokeStyle =
+
+            "#252d26";
+
+
+        ctx.lineWidth = 4;
+
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+
+            -3,
+
+            10
+
+        );
+
+
+        ctx.lineTo(
+
+            -5,
+
+            16
+
+        );
+
+
+        ctx.stroke();
+
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+
+            3,
+
+            10
+
+        );
+
+
+        ctx.lineTo(
+
+            5,
+
+            16
+
+        );
+
+
+        ctx.stroke();
+
+
+        /* 작은 검 */
+
+        ctx.save();
+
+
+        ctx.rotate(
+
+            0.25
+
+        );
+
+
+        ctx.fillStyle =
+
+            "#b08b3e";
+
+
+        ctx.fillRect(
+
+            7,
+
+            1,
+
+            11,
+
+            2
+
+        );
+
+
+        ctx.fillStyle =
+
+            "#ddd5b4";
+
+
+        ctx.fillRect(
+
+            17,
+
+            .5,
+
+            8,
+
+            3
+
+        );
+
+
+        ctx.restore();
+
+
+        ctx.restore();
+
+    }
+
+};
+
+
+/* =========================================================
+   ★ 핵심 : 3초마다 화살 속도 증가
+========================================================= */
+
+function getArrowSpeed() {
+
+    /*
+     * 현재 생존 시간을 3초 단위로 나눔
+     *
+     * 0~2.99초  = LEVEL 0
+     * 3~5.99초  = LEVEL 1
+     * 6~8.99초  = LEVEL 2
+     * 9~11.99초 = LEVEL 3
+     *
+     * 따라서 정확히 3초마다
+     * 화살 속도가 증가한다.
+     */
+
+    const level =
+
+        Math.floor(
+            game.elapsed / 3
+        );
+
+
+    /*
+     * 기본 속도 = 560
+     *
+     * 3초마다 +65
+     */
+
+    return 560 + level * 65;
+
+}
+
+
+/* =========================================================
+   ★ 핵심 : 3초마다 화살 생성 빈도 증가
+========================================================= */
+
+function patternInterval() {
+
+    const level =
+
+        Math.floor(
+            game.elapsed / 3
+        );
+
+
+    /*
+     * 기본 생성 간격
+     *
+     * 0~2초     : 0.70초
+     * 3~5초     : 0.64초
+     * 6~8초     : 0.58초
+     * 9~11초    : 0.52초
+     *
+     * ...
+     *
+     * 최소 0.12초
+     */
+
+    return Math.max(
+
+        0.12,
+
+        0.70 -
+        level * 0.06
+
+    );
+
+}
+
+
+/* =========================================================
+   화살
+========================================================= */
+
+class Arrow {
+
+    constructor(
+
+        x,
+
+        y,
+
+        angle,
+
+        speed
+
+    ) {
+
+        this.x = x;
+
+        this.y = y;
+
+        this.angle = angle;
+
+        this.speed = speed;
+
+        this.active = true;
+
+        this.hitOffset = 27;
+
+    }
+
+
+    update(dt) {
+
+        this.x +=
+
+            Math.cos(
+                this.angle
+            ) *
+            this.speed *
+            dt;
+
+
+        this.y +=
+
+            Math.sin(
+                this.angle
+            ) *
+            this.speed *
+            dt;
+
+    }
+
+
+    isOutside() {
+
+        const margin = 150;
+
+
+        return (
+
+            this.x < -margin ||
+
+            this.x >
+                canvas.width +
+                margin ||
+
+            this.y < -margin ||
+
+            this.y >
+                canvas.height +
+                margin
+
+        );
+
+    }
+
+
+    collides() {
+
+        const tipX =
+
+            this.x +
+
+            Math.cos(
+                this.angle
+            ) *
+            this.hitOffset;
+
+
+        const tipY =
+
+            this.y +
+
+            Math.sin(
+                this.angle
+            ) *
+            this.hitOffset;
+
+
+        const dx =
+
+            tipX -
+            player.x;
+
+
+        const dy =
+
+            tipY -
+            player.y;
+
+
+        const distance =
+
+            Math.sqrt(
+                dx * dx +
+                dy * dy
+            );
+
+
+        return (
+
+            distance <
+
+            player.radius + 8
+
+        );
+
+    }
+
+
+    draw() {
+
+        ctx.save();
+
+
+        ctx.translate(
+
+            this.x,
+
+            this.y
+
+        );
+
+
+        ctx.rotate(
+
+            this.angle
+
+        );
+
+
+        /* 빛 잔상 */
+
+        const trail =
+
+            ctx.createLinearGradient(
+
+                -130,
+
+                0,
+
+                15,
+
+                0
+
+            );
+
+
+        trail.addColorStop(
+
+            0,
+
+            "rgba(230,190,70,0)"
+
+        );
+
+
+        trail.addColorStop(
+
+            .65,
+
+            "rgba(230,190,70,.035)"
+
+        );
+
+
+        trail.addColorStop(
+
+            1,
+
+            "rgba(255,225,125,.3)"
+
+        );
+
+
+        ctx.fillStyle = trail;
+
+
+        ctx.fillRect(
+
+            -130,
+
+            -1,
+
+            130,
+
+            2
+
+        );
+
+
+        /* 긴 화살대 */
+
+        const shaft =
+
+            ctx.createLinearGradient(
+
+                -52,
+
+                -2,
+
+                30,
+
+                2
+
+            );
+
+
+        shaft.addColorStop(
+
+            0,
+
+            "#553b13"
+
+        );
+
+
+        shaft.addColorStop(
+
+            .3,
+
+            "#98712b"
+
+        );
+
+
+        shaft.addColorStop(
+
+            .55,
+
+            "#e3c76d"
+
+        );
+
+
+        shaft.addColorStop(
+
+            .75,
+
+            "#fff1a4"
+
+        );
+
+
+        shaft.addColorStop(
+
+            1,
+
+            "#7d5a1c"
+
+        );
+
+
+        ctx.fillStyle = shaft;
+
+
+        ctx.fillRect(
+
+            -55,
+
+            -1.5,
+
+            88,
+
+            3
+
+        );
+
+
+        /* 날카로운 촉 */
+
+        ctx.shadowColor =
+
+            "rgba(255,220,105,.85)";
+
+
+        ctx.shadowBlur = 12;
+
+
+        ctx.beginPath();
+
+
+        ctx.moveTo(
+
+            58,
+
+            0
+
+        );
+
+
+        ctx.lineTo(
+
+            20,
+
+            -8
+
+        );
+
+
+        ctx.lineTo(
+
+            25,
+
+            -1.8
+
+        );
+
+
+        ctx.lineTo(
+
+            18,
+
+            0
+
+        );
+
+
+        ctx.lineTo(
+
+            25,
+
+            1.8
+
+        );
+
+
+        ctx.lineTo(
+
+            20,
+
+            8
+
+        );
+
+
+        ctx.closePath();
+
+
+        const head =
+
+            ctx.createLinearGradient(
+
+                18,
+
+                -8,
+
+                58,
+
+                8
+
+            );
+
+
+        head.addColorStop(
+
+            0,
+
+            "#fff5bd"
+
+        );
+
+
+        head.addColorStop(
+
+            .35,
+
+            "#e8cb6a"
+
+        );
+
+
+        head.addColorStop(
+
+            .7,
+
+            "#a87823"
+
+        );
+
+
+        head.addColorStop(
+
+            1,
+
+            "#fff1a1"
+
+        );
+
+
+        ctx.fillStyle = head;
+
+        ctx.fill();
+
+
+        /* 촉 중앙 */
+
+        ctx.shadowBlur = 0;
+
+
+        ctx.beginPath();
+
+
+        ctx.moveTo(
+
+            58,
+
+            0
+
+        );
+
+
+        ctx.lineTo(
+
+            24,
+
+            -1.2
+
+        );
+
+
+        ctx.lineTo(
+
+            24,
+
+            1.2
+
+        );
+
+
+        ctx.closePath();
+
+
+        ctx.fillStyle =
+
+            "#fff9d8";
+
+
+        ctx.fill();
+
+
+        /* 꼬리 깃 */
+
+        ctx.beginPath();
+
+
+        ctx.moveTo(
+
+            -54,
+
+            0
+
+        );
+
+
+        ctx.lineTo(
+
+            -69,
+
+            -9
+
+        );
+
+
+        ctx.lineTo(
+
+            -63,
+
+            0
+
+        );
+
+
+        ctx.lineTo(
+
+            -69,
+
+            9
+
+        );
+
+
+        ctx.closePath();
+
+
+        ctx.fillStyle =
+
+            "#806326";
+
+
+        ctx.fill();
+
+
+        /* 깃털 하이라이트 */
+
+        ctx.beginPath();
+
+
+        ctx.moveTo(
+
+            -54,
+
+            -1
+
+        );
+
+
+        ctx.lineTo(
+
+            -67,
+
+            -6
+
+        );
+
+
+        ctx.lineTo(
+
+            -62,
+
+            -1
+
+        );
+
+
+        ctx.closePath();
+
+
+        ctx.fillStyle =
+
+            "#d7bb63";
+
+
+        ctx.fill();
+
+
+        /* 화살대 빛 */
+
+        ctx.fillStyle =
+
+            "rgba(255,255,225,.8)";
+
+
+        ctx.fillRect(
+
+            -45,
+
+            -.5,
+
+            55,
+
+            1
+
+        );
+
+
+        ctx.restore();
+
+    }
+
+}
+
+
+/* =========================================================
+   화살 추가
+========================================================= */
+
+function addArrow(
+
+    x,
+
+    y,
+
+    angle,
+
+    speed
+
+) {
+
+    game.arrows.push(
+
+        new Arrow(
+
+            x,
+
+            y,
+
+            angle,
+
+            speed
+
+        )
+
+    );
+
+}
+
+
+/* =========================================================
+   가장자리 위치
+========================================================= */
+
+function edgePosition() {
+
+    const side =
+
+        Math.floor(
+
+            Math.random() * 4
+
+        );
+
+
+    const margin = 100;
+
+
+    if (side === 0) {
+
+        return {
+
+            x:
+                Math.random() *
+                canvas.width,
+
+            y:
+                -margin
+
+        };
+
+    }
+
+
+    if (side === 1) {
+
+        return {
+
+            x:
+                canvas.width +
+                margin,
+
+            y:
+                Math.random() *
+                canvas.height
+
+        };
+
+    }
+
+
+    if (side === 2) {
+
+        return {
+
+            x:
+                Math.random() *
+                canvas.width,
+
+            y:
+                canvas.height +
+                margin
+
+        };
+
+    }
+
+
+    return {
+
+        x:
+            -margin,
+
+        y:
+            Math.random() *
+            canvas.height
+
+    };
+
+}
+
+
+/* =========================================================
+   플레이어 방향
+========================================================= */
+
+function angleToPlayer(
+
+    x,
+
+    y
+
+) {
+
+    return Math.atan2(
+
+        player.y - y,
+
+        player.x - x
+
+    );
+
+}
+
+
+/* =========================================================
+   패턴 1 : 단발
+========================================================= */
+
+function patternSingle() {
+
+    const p =
+        edgePosition();
+
+
+    addArrow(
+
+        p.x,
+
+        p.y,
+
+        angleToPlayer(
+
+            p.x,
+
+            p.y
+
+        ),
+
+        getArrowSpeed()
+
+    );
+
+}
+
+
+/* =========================================================
+   패턴 2 : 일렬
+========================================================= */
+
+function patternLine() {
+
+    const side =
+
+        Math.floor(
+
+            Math.random() * 4
+
+        );
+
+
+    const speed =
+
+        getArrowSpeed();
+
+
+    const count = 4;
+
+
+    const gap = 110;
+
+
+    if (side === 0) {
+
+        const x =
+
+            Math.random() *
+            canvas.width;
+
+
+        for (
+
+            let i = 0;
+
+            i < count;
+
+            i++
+
+        ) {
+
+            addArrow(
+
+                x +
+                    (i - 1.5) *
+                    gap,
+
+                -100,
+
+                Math.PI / 2,
+
+                speed
+
+            );
+
+        }
+
+    }
+
+
+    else if (side === 1) {
+
+        const y =
+
+            Math.random() *
+            canvas.height;
+
+
+        for (
+
+            let i = 0;
+
+            i < count;
+
+            i++
+
+        ) {
+
+            addArrow(
+
+                canvas.width +
+                    100,
+
+                y +
+                    (i - 1.5) *
+                    gap,
+
+                Math.PI,
+
+                speed
+
+            );
+
+        }
+
+    }
+
+
+    else if (side === 2) {
+
+        const x =
+
+            Math.random() *
+            canvas.width;
+
+
+        for (
+
+            let i = 0;
+
+            i < count;
+
+            i++
+
+        ) {
+
+            addArrow(
+
+                x +
+                    (i - 1.5) *
+                    gap,
+
+                canvas.height +
+                    100,
+
+                -Math.PI / 2,
+
+                speed
+
+            );
+
+        }
+
+    }
+
+
+    else {
+
+        const y =
+
+            Math.random() *
+            canvas.height;
+
+
+        for (
+
+            let i = 0;
+
+            i < count;
+
+            i++
+
+        ) {
+
+            addArrow(
+
+                -100,
+
+                y +
+                    (i - 1.5) *
+                    gap,
+
+                0,
+
+                speed
+
+            );
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   패턴 3 : 대각선
+========================================================= */
+
+function patternDiagonal() {
+
+    const speed =
+
+        getArrowSpeed();
+
+
+    const margin = 100;
+
+
+    const corner =
+
+        Math.floor(
+
+            Math.random() * 4
+
+        );
+
+
+    if (corner === 0) {
+
+        addArrow(
+
+            -margin,
+
+            -margin,
+
+            Math.PI / 4,
+
+            speed
+
+        );
+
+    }
+
+    else if (corner === 1) {
+
+        addArrow(
+
+            canvas.width +
+                margin,
+
+            -margin,
+
+            3 *
+            Math.PI / 4,
+
+            speed
+
+        );
+
+    }
+
+    else if (corner === 2) {
+
+        addArrow(
+
+            canvas.width +
+                margin,
+
+            canvas.height +
+                margin,
+
+            5 *
+            Math.PI / 4,
+
+            speed
+
+        );
+
+    }
+
+    else {
+
+        addArrow(
+
+            -margin,
+
+            canvas.height +
+                margin,
+
+            7 *
+            Math.PI / 4,
+
+            speed
+
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   패턴 4 : 부채꼴
+========================================================= */
+
+function patternFan() {
+
+    const side =
+
+        Math.floor(
+
+            Math.random() * 4
+
+        );
+
+
+    const count = 5;
+
+
+    const spread =
+
+        Math.PI / 14;
+
+
+    const speed =
+
+        getArrowSpeed();
+
+
+    let x;
+
+    let y;
+
+    let base;
+
+
+    if (side === 0) {
+
+        x =
+
+            Math.random() *
+            canvas.width;
+
+        y = -100;
+
+        base =
+            Math.PI / 2;
+
+    }
+
+
+    else if (side === 1) {
+
+        x =
+            canvas.width +
+            100;
+
+        y =
+            Math.random() *
+            canvas.height;
+
+        base = Math.PI;
+
+    }
+
+
+    else if (side === 2) {
+
+        x =
+            Math.random() *
+            canvas.width;
+
+        y =
+            canvas.height +
+            100;
+
+        base =
+            -Math.PI / 2;
+
+    }
+
+
+    else {
+
+        x = -100;
+
+        y =
+            Math.random() *
+            canvas.height;
+
+        base = 0;
+
+    }
+
+
+    for (
+
+        let i = 0;
+
+        i < count;
+
+        i++
+
+    ) {
+
+        const angle =
+
+            base +
+
+            (i - 2) *
+            spread;
+
+
+        addArrow(
+
+            x,
+
+            y,
+
+            angle,
+
+            speed
+
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   패턴 5 : 양쪽
+========================================================= */
+
+function patternOpposite() {
+
+    const y =
+
+        100 +
+
+        Math.random() *
+        (
+            canvas.height -
+            200
+        );
+
+
+    const speed =
+
+        getArrowSpeed();
+
+
+    addArrow(
+
+        -100,
+
+        y,
+
+        0,
+
+        speed
+
+    );
+
+
+    addArrow(
+
+        canvas.width +
+            100,
+
+        y,
+
+        Math.PI,
+
+        speed
+
+    );
+
+}
+
+
+/* =========================================================
+   패턴 6 : 교차
+========================================================= */
+
+function patternCross() {
+
+    const speed =
+
+        getArrowSpeed();
+
+
+    const margin = 100;
+
+
+    addArrow(
+
+        -margin,
+
+        -margin,
+
+        Math.PI / 4,
+
+        speed
+
+    );
+
+
+    addArrow(
+
+        canvas.width +
+            margin,
+
+        -margin,
+
+        3 *
+        Math.PI / 4,
+
+        speed
+
+    );
+
+
+    addArrow(
+
+        canvas.width +
+            margin,
+
+        canvas.height +
+            margin,
+
+        5 *
+        Math.PI / 4,
+
+        speed
+
+    );
+
+
+    addArrow(
+
+        -margin,
+
+        canvas.height +
+            margin,
+
+        7 *
+        Math.PI / 4,
+
+        speed
+
+    );
+
+}
+
+
+/* =========================================================
+   패턴 7 : 여러 방향
+========================================================= */
+
+function patternBurst() {
+
+    const speed =
+
+        getArrowSpeed();
+
+
+    const count = 6;
+
+
+    for (
+
+        let i = 0;
+
+        i < count;
+
+        i++
+
+    ) {
+
+        const p =
+            edgePosition();
+
+
+        addArrow(
+
+            p.x,
+
+            p.y,
+
+            angleToPlayer(
+
+                p.x,
+
+                p.y
+
+            ),
+
+            speed
+
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   패턴 선택
+========================================================= */
+
+function createPattern() {
+
+    const t =
+        game.elapsed;
+
+
+    /*
+     * 0~3초
+     */
+
+    if (t < 3) {
+
+        patternSingle();
+
+        return;
+
+    }
+
+
+    /*
+     * 3~6초
+     */
+
+    if (t < 6) {
+
+        const patterns = [
+
+            patternSingle,
+
+            patternLine,
+
+            patternDiagonal
+
+        ];
+
+
+        patterns[
+
+            Math.floor(
+
+                Math.random() *
+                patterns.length
+
+            )
+
+        ]();
+
+
+        return;
+
+    }
+
+
+    /*
+     * 6~12초
+     */
+
+    if (t < 12) {
+
+        const patterns = [
+
+            patternLine,
+
+            patternDiagonal,
+
+            patternFan,
+
+            patternOpposite
+
+        ];
+
+
+        patterns[
+
+            Math.floor(
+
+                Math.random() *
+                patterns.length
+
+            )
+
+        ]();
+
+
+        return;
+
+    }
+
+
+    /*
+     * 12초 이후
+     */
+
+    const patterns = [
+
+        patternSingle,
+
+        patternLine,
+
+        patternDiagonal,
+
+        patternFan,
+
+        patternOpposite,
+
+        patternCross,
+
+        patternBurst
+
+    ];
+
+
+    patterns[
+
+        Math.floor(
+
+            Math.random() *
+            patterns.length
+
+        )
+
+    ]();
+
+}
+
+
+/* =========================================================
+   배경
+========================================================= */
+
+function drawBackground() {
+
+    const w =
+        canvas.width;
+
+
+    const h =
+        canvas.height;
+
+
+    const bg =
+
+        ctx.createLinearGradient(
+
+            0,
+
+            0,
+
+            0,
+
+            h
+
+        );
+
+
+    bg.addColorStop(
+
+        0,
+
+        "#020906"
+
+    );
+
+
+    bg.addColorStop(
+
+        0.38,
+
+        "#0b2415"
+
+    );
+
+
+    bg.addColorStop(
+
+        0.72,
+
+        "#07170d"
+
+    );
+
+
+    bg.addColorStop(
+
+        1,
+
+        "#010503"
+
+    );
+
+
+    ctx.fillStyle = bg;
+
+
+    ctx.fillRect(
+
+        0,
+
+        0,
+
+        w,
+
+        h
+
+    );
+
+
+    /*
+     * 먼 숲
+     */
+
+    drawForestLayer(
+
+        105,
+
+        0.32,
+
+        0.20,
+
+        0.65
+
+    );
+
+
+    /*
+     * 중간 숲
+     */
+
+    drawForestLayer(
+
+        80,
+
+        0.65,
+
+        0.34,
+
+        0.82
+
+    );
+
+
+    /*
+     * CODE
+     */
+
+    ctx.save();
+
+
+    ctx.textAlign =
+        "center";
+
+
+    ctx.textBaseline =
+        "middle";
+
+
+    const codeSize =
+
+        Math.min(
+
+            w * 0.17,
+
+            180
+
+        );
+
+
+    ctx.font =
+
+        "bold " +
+        codeSize +
+        "px Georgia";
+
+
+    ctx.fillStyle =
+
+        "rgba(224, 187, 67, 0.065)";
+
+
+    ctx.shadowColor =
+
+        "rgba(220, 180, 60, 0.22)";
+
+
+    ctx.shadowBlur = 45;
+
+
+    ctx.fillText(
+
+        "CODE",
+
+        w / 2,
+
+        h / 2
+
+    );
+
+
+    ctx.restore();
+
+
+    /*
+     * 전경
+     */
+
+    drawForestLayer(
+
+        58,
+
+        1.0,
+
+        0.72,
+
+        1.0
+
+    );
+
+
+    /*
+     * 안개
+     */
+
+    const fog =
+
+        ctx.createRadialGradient(
+
+            w / 2,
+
+            h / 2,
+
+            20,
+
+            w / 2,
+
+            h / 2,
+
+            Math.max(w, h) * 0.55
+
+        );
+
+
+    fog.addColorStop(
+
+        0,
+
+        "rgba(120,150,100,0.045)"
+
+    );
+
+
+    fog.addColorStop(
+
+        0.45,
+
+        "rgba(50,90,60,0.018)"
+
+    );
+
+
+    fog.addColorStop(
+
+        1,
+
+        "rgba(0,0,0,0)"
+
+    );
+
+
+    ctx.fillStyle = fog;
+
+
+    ctx.fillRect(
+
+        0,
+
+        0,
+
+        w,
+
+        h
+
+    );
+
+
+    /*
+     * 비네팅
+     */
+
+    const vignette =
+
+        ctx.createRadialGradient(
+
+            w / 2,
+
+            h / 2,
+
+            h * 0.18,
+
+            w / 2,
+
+            h / 2,
+
+            Math.max(w, h) * 0.78
+
+        );
+
+
+    vignette.addColorStop(
+
+        0,
+
+        "rgba(0,0,0,0)"
+
+    );
+
+
+    vignette.addColorStop(
+
+        1,
+
+        "rgba(0,0,0,0.57)"
+
+    );
+
+
+    ctx.fillStyle =
+        vignette;
+
+
+    ctx.fillRect(
+
+        0,
+
+        0,
+
+        w,
+
+        h
+
+    );
+
+}
+
+
+/* =========================================================
+   대나무 숲
+========================================================= */
+
+function drawForestLayer(
+
+    spacing,
+
+    scale,
+
+    alpha,
+
+    detail
+
+) {
+
+    const w =
+        canvas.width;
+
+
+    const h =
+        canvas.height;
+
+
+    const offset =
+
+        (
+            game.elapsed * 5
+        ) %
+        spacing;
+
+
+    for (
+
+        let i = -2;
+
+        i <
+        Math.ceil(
+            w / spacing
+        ) + 3;
+
+        i++
+
+    ) {
+
+        const baseX =
+
+            i *
+            spacing -
+            offset;
+
+
+        const wave =
+
+            Math.sin(
+                i * 1.73
+            ) *
+            24 *
+            scale;
+
+
+        const x =
+
+            baseX +
+            wave;
+
+
+        const height =
+
+            h *
+            (
+                0.75 +
+
+                (
+                    Math.sin(
+                        i * 2.37
+                    ) + 1
+                ) *
+                0.15
+            );
+
+
+        const width =
+
+            (
+                10 +
+                (i % 4) * 2
+            ) *
+            scale;
+
+
+        const lean =
+
+            Math.sin(
+                i * 1.91
+            ) *
+            0.045;
+
+
+        ctx.save();
+
+
+        ctx.translate(
+
+            x,
+
+            h + 40
+
+        );
+
+
+        ctx.rotate(
+
+            lean
+
+        );
+
+
+        const bamboo =
+
+            ctx.createLinearGradient(
+
+                -width,
+
+                0,
+
+                width,
+
+                0
+
+            );
+
+
+        bamboo.addColorStop(
+
+            0,
+
+            `rgba(3,18,8,${alpha})`
+
+        );
+
+
+        bamboo.addColorStop(
+
+            0.35,
+
+            `rgba(32,70,32,${alpha})`
+
+        );
+
+
+        bamboo.addColorStop(
+
+            0.58,
+
+            `rgba(64,105,51,${alpha})`
+
+        );
+
+
+        bamboo.addColorStop(
+
+            0.75,
+
+            `rgba(29,61,29,${alpha})`
+
+        );
+
+
+        bamboo.addColorStop(
+
+            1,
+
+            `rgba(2,15,7,${alpha})`
+
+        );
+
+
+        ctx.fillStyle = bamboo;
+
+
+        ctx.fillRect(
+
+            -width / 2,
+
+            -height,
+
+            width,
+
+            height
+
+        );
+
+
+        /* 마디 */
+
+        ctx.fillStyle =
+
+            `rgba(
+                5,
+                25,
+                10,
+                ${alpha * 1.15}
+            )`;
+
+
+        const segment =
+
+            55 *
+            scale;
+
+
+        for (
+
+            let y = -segment;
+
+            y > -height;
+
+            y -= segment
+
+        ) {
+
+            ctx.fillRect(
+
+                -width / 2 - 2,
+
+                y,
+
+                width + 4,
+
+                4
+
+            );
+
+        }
+
+
+        /* 잎 */
+
+        if (detail > 0.5) {
+
+            drawBambooLeaves(
+
+                0,
+
+                -height * 0.82,
+
+                scale,
+
+                alpha
+
+            );
+
+
+            drawBambooLeaves(
+
+                0,
+
+                -height * 0.55,
+
+                scale,
+
+                alpha * 0.7
+
+            );
+
+        }
+
+
+        ctx.restore();
+
+    }
+
+}
+
+
+/* =========================================================
+   대나무 잎
+========================================================= */
+
+function drawBambooLeaves(
+
+    x,
+
+    y,
+
+    scale,
+
+    alpha
+
+) {
+
+    ctx.save();
+
+
+    ctx.translate(
+
+        x,
+
+        y
+
+    );
+
+
+    for (
+
+        let i = 0;
+
+        i < 5;
+
+        i++
+
+    ) {
+
+        const angle =
+
+            -1.35 +
+            i * 0.65;
+
+
+        const length =
+
+            42 *
+            scale;
+
+
+        ctx.save();
+
+
+        ctx.rotate(
+
+            angle
+
+        );
+
+
+        ctx.beginPath();
+
+
+        ctx.moveTo(
+
+            0,
+
+            0
+
+        );
+
+
+        ctx.quadraticCurveTo(
+
+            length * 0.55,
+
+            -8 * scale,
+
+            length,
+
+            0
+
+        );
+
+
+        ctx.quadraticCurveTo(
+
+            length * 0.5,
+
+            8 * scale,
+
+            0,
+
+            0
+
+        );
+
+
+        ctx.fillStyle =
+
+            `rgba(
+                35,
+                82,
+                38,
+                ${alpha * 0.55}
+            )`;
+
+
+        ctx.fill();
+
+
+        ctx.restore();
+
+    }
+
+
+    ctx.restore();
+
+}
+
+
+/* =========================================================
+   피격 효과
+========================================================= */
+
+function drawEffects() {
+
+    if (
+
+        game.flash <= 0
+
+    ) {
+
+        return;
+
+    }
+
+
+    ctx.fillStyle =
+
+        `rgba(
+            220,
+            190,
+            80,
+            ${game.flash}
+        )`;
+
+
+    ctx.fillRect(
+
+        0,
+
+        0,
+
+        canvas.width,
+
+        canvas.height
+
+    );
+
+}
+
+
+/* =========================================================
+   업데이트
+========================================================= */
+
+function update(dt) {
+
+    game.elapsed =
+
+        (
+            performance.now() -
+            game.startTime
+        ) / 1000;
+
+
+    player.update(dt);
+
+
+    /*
+     * 화살 생성
+     */
+
+    game.arrowTimer -= dt;
+
+
+    if (
+
+        game.arrowTimer <= 0
+
+    ) {
+
+        createPattern();
+
+
+        /*
+         * ★ 3초마다 자동으로
+         * 생성 간격도 짧아짐
+         */
+
+        game.arrowTimer =
+
+            patternInterval();
+
+    }
+
+
+    /*
+     * 화살 이동
+     */
+
+    for (
+
+        const arrow
+        of game.arrows
+
+    ) {
+
+        arrow.update(dt);
+
+
+        if (
+
+            arrow.collides()
+
+        ) {
+
+            game.flash = 0.18;
+
+
+            gameOver();
+
+
+            return;
+
+        }
+
+
+        if (
+
+            arrow.isOutside()
+
+        ) {
+
+            arrow.active = false;
+
+        }
+
+    }
+
+
+    game.arrows =
+
+        game.arrows.filter(
+
+            arrow =>
+                arrow.active
+
+        );
+
+
+    if (
+
+        game.flash > 0
+
+    ) {
+
+        game.flash -=
+
+            dt * 2;
+
+    }
+
+}
+
+
+/* =========================================================
+   렌더
+========================================================= */
+
+function draw() {
+
+    drawBackground();
+
+
+    /*
+     * 화살
+     */
+
+    for (
+
+        const arrow
+        of game.arrows
+
+    ) {
+
+        arrow.draw();
+
+    }
+
+
+    /*
+     * 플레이어
+     */
+
+    player.draw();
+
+
+    drawEffects();
+
+
+    /*
+     * 시간
+     */
+
+    timeText.textContent =
+
+        game.elapsed.toFixed(2);
+
+}
+
+
+/* =========================================================
+   게임 시작
+========================================================= */
+
+function startGame() {
+
+    game.running = true;
+
+
+    game.elapsed = 0;
+
+
+    game.arrows = [];
+
+
+    game.arrowTimer = 0.8;
+
+
+    game.startTime =
+
+        performance.now();
+
+
+    game.lastTime =
+
+        performance.now();
+
+
+    game.flash = 0;
+
+
+    player.reset();
+
+
+    startScreen
+        .classList
+        .add("hidden");
+
+
+    gameOverScreen
+        .classList
+        .add("hidden");
+
+
+    requestAnimationFrame(
+
+        loop
+
+    );
+
+}
+
+
+/* =========================================================
+   게임 오버
+========================================================= */
+
+function gameOver() {
+
+    if (
+
+        !game.running
+
+    ) {
+
+        return;
+
+    }
+
+
+    game.running = false;
+
+
+    /*
+     * 최고 기록 갱신
+     */
+
+    if (
+
+        game.elapsed >
+        bestRecord
+
+    ) {
+
+        bestRecord =
+
+            game.elapsed;
+
+
+        localStorage.setItem(
+
+            "code_bamboo_best",
+
+            bestRecord.toString()
+
+        );
+
+    }
+
+
+    finalTime.textContent =
+
+        game.elapsed.toFixed(2);
+
+
+    bestTime.textContent =
+
+        bestRecord.toFixed(2);
+
+
+    gameOverScreen
+        .classList
+        .remove("hidden");
+
+}
+
+
+/* =========================================================
+   게임 루프
+========================================================= */
+
+function loop(now) {
+
+    if (
+
+        !game.running
+
+    ) {
+
+        return;
+
+    }
+
+
+    const dt =
+
+        Math.min(
+
+            (
+                now -
+                game.lastTime
+            ) / 1000,
+
+            0.05
+
+        );
+
+
+    game.lastTime = now;
+
+
+    update(dt);
+
+
+    draw();
+
+
+    requestAnimationFrame(
+
+        loop
+
+    );
+
+}
+
+
+/* =========================================================
+   버튼
+========================================================= */
+
+startButton.addEventListener(
+
+    "click",
+
+    startGame
+
+);
+
+
+restartButton.addEventListener(
+
+    "click",
+
+    startGame
+
+);
+
+
+/* =========================================================
+   초기화
+========================================================= */
+
+player.reset();
+
+
+draw();
+
+</script>
+
+</body>
+</html>
