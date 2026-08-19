@@ -1,0 +1,3142 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+
+<title>CODE : 죽림고수</title>
+
+<style>
+
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+}
+
+html,body{
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:#020604;
+}
+
+body{
+    font-family:Georgia,serif;
+}
+
+canvas{
+    position:fixed;
+    inset:0;
+    width:100vw;
+    height:100vh;
+    display:block;
+    outline:none;
+    touch-action:none;
+}
+
+#hud{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    z-index:10;
+}
+
+#title{
+    position:absolute;
+    top:20px;
+    left:25px;
+    color:rgba(235,205,110,.8);
+    font-size:15px;
+    letter-spacing:6px;
+}
+
+#heart{
+    position:absolute;
+    top:17px;
+    left:50%;
+    transform:translateX(-50%);
+    color:#e3c86b;
+    font-size:25px;
+    text-shadow:0 0 18px rgba(240,200,70,.6);
+}
+
+#time{
+    position:absolute;
+    top:20px;
+    right:25px;
+    color:rgba(235,225,190,.8);
+    font-family:monospace;
+    font-size:15px;
+}
+
+.screen{
+    position:fixed;
+    z-index:30;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    width:min(500px,88vw);
+    padding:45px 30px;
+    text-align:center;
+    background:linear-gradient(
+        145deg,
+        rgba(8,25,16,.96),
+        rgba(2,10,6,.97)
+    );
+    border:1px solid rgba(220,190,90,.35);
+    box-shadow:0 25px 80px rgba(0,0,0,.75);
+    backdrop-filter:blur(12px);
+}
+
+.hidden{
+    display:none!important;
+}
+
+.small-title{
+    color:rgba(220,190,100,.65);
+    font-size:10px;
+    letter-spacing:5px;
+    margin-bottom:12px;
+}
+
+h1{
+    color:#e0c56c;
+    font-size:clamp(55px,13vw,100px);
+    letter-spacing:10px;
+}
+
+h2{
+    margin-top:10px;
+    color:#ddd4b0;
+    font-weight:normal;
+    letter-spacing:7px;
+}
+
+.info{
+    margin-top:25px;
+    color:rgba(235,235,215,.7);
+    font-size:14px;
+    line-height:1.9;
+}
+
+.controls{
+    margin-top:15px;
+    color:rgba(220,195,120,.7);
+    font-family:monospace;
+    font-size:12px;
+}
+
+button{
+    position:relative;
+    z-index:50;
+    margin-top:28px;
+    padding:14px 38px;
+    background:rgba(210,175,75,.06);
+    border:1px solid rgba(220,190,100,.55);
+    color:#e4c96f;
+    font-family:Georgia,serif;
+    font-size:14px;
+    letter-spacing:3px;
+    cursor:pointer;
+    pointer-events:auto;
+    touch-action:manipulation;
+}
+
+button:hover{
+    background:rgba(220,180,70,.15);
+}
+
+.result-label{
+    margin-top:25px;
+    color:rgba(220,210,175,.5);
+    font-size:10px;
+    letter-spacing:4px;
+}
+
+#finalTime{
+    margin-top:6px;
+    color:#e4c96f;
+    font-family:monospace;
+    font-size:38px;
+}
+
+#bestTime{
+    margin-top:5px;
+    color:rgba(230,210,145,.65);
+    font-family:monospace;
+}
+
+#reviveScreen{
+    z-index:35;
+}
+
+#reviveCount{
+    margin-top:20px;
+    color:#e4c96f;
+    font-family:monospace;
+    font-size:52px;
+}
+
+#reviveInfo{
+    margin-top:12px;
+    color:rgba(235,235,215,.7);
+    font-size:14px;
+    line-height:1.8;
+}
+
+#reviveRemain{
+    margin-top:12px;
+    color:rgba(220,195,120,.7);
+    font-family:monospace;
+    font-size:12px;
+}
+
+</style>
+</head>
+
+<body tabindex="0">
+
+<canvas id="game" tabindex="0"></canvas>
+
+<div id="hud">
+
+    <div id="title">CODE</div>
+
+    <div id="heart">♥</div>
+
+    <div id="time">0.00</div>
+
+</div>
+
+
+<!-- =========================
+     시작 화면
+========================= -->
+
+<div id="startScreen" class="screen">
+
+    <div class="small-title">
+        BAMBOO SURVIVAL
+    </div>
+
+    <h1>CODE</h1>
+
+    <h2>죽림고수</h2>
+
+    <div class="info">
+
+        죽림을 가르는 화살을 피해<br>
+        최대한 오래 살아남아라.
+
+    </div>
+
+    <div class="controls">
+        WASD / 방향키 이동
+    </div>
+
+    <button id="startButton">
+        GAME START
+    </button>
+
+</div>
+
+
+<!-- =========================
+     부활 화면
+========================= -->
+
+<div id="reviveScreen" class="screen hidden">
+
+    <div class="small-title">
+        SURVIVAL INTERRUPTED
+    </div>
+
+    <h2>REVIVE</h2>
+
+    <div id="reviveCount">
+        3
+    </div>
+
+    <div id="reviveInfo">
+
+        R 키를 누르면 부활합니다.<br>
+        부활하지 않으면 로비로 돌아갑니다.
+
+    </div>
+
+    <div id="reviveRemain">
+        REVIVES LEFT : 3
+    </div>
+
+</div>
+
+
+<!-- =========================
+     게임 오버
+========================= -->
+
+<div id="gameOverScreen" class="screen hidden">
+
+    <div class="small-title">
+        SURVIVAL ENDED
+    </div>
+
+    <h2>GAME OVER</h2>
+
+    <div class="result-label">
+        SURVIVAL TIME
+    </div>
+
+    <div id="finalTime">
+        0.00
+    </div>
+
+    <div class="result-label">
+        BEST RECORD
+    </div>
+
+    <div id="bestTime">
+        0.00
+    </div>
+
+    <button id="restartButton">
+        RESTART
+    </button>
+
+    <div class="controls">
+        SPACE 키로 재시작
+    </div>
+
+</div>
+
+
+<script>
+
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
+
+
+const startScreen=
+    document.getElementById("startScreen");
+
+const reviveScreen=
+    document.getElementById("reviveScreen");
+
+const gameOverScreen=
+    document.getElementById("gameOverScreen");
+
+const startButton=
+    document.getElementById("startButton");
+
+const restartButton=
+    document.getElementById("restartButton");
+
+const timeText=
+    document.getElementById("time");
+
+const finalTime=
+    document.getElementById("finalTime");
+
+const bestTime=
+    document.getElementById("bestTime");
+
+const reviveCount=
+    document.getElementById("reviveCount");
+
+const reviveRemain=
+    document.getElementById("reviveRemain");
+
+
+/* =========================
+   게임 상태
+========================= */
+
+const game={
+
+    running:false,
+
+    startTime:0,
+
+    lastTime:0,
+
+    elapsed:0,
+
+    arrowTimer:0,
+
+    arrows:[],
+
+    flash:0,
+
+    /* 부활 */
+
+    reviveAvailable:3,
+
+    reviveCountdown:0,
+
+    reviveDeadX:0,
+
+    reviveDeadY:0,
+
+    invincible:0,
+
+    waitingRevive:false,
+
+    /* 마지막 특수 패턴 */
+
+    lastSpecialPattern:null
+
+};
+
+
+const keys={};
+
+
+/* =========================
+   화면 크기
+========================= */
+
+function resize(){
+
+    canvas.width=window.innerWidth;
+
+    canvas.height=window.innerHeight;
+
+    draw();
+
+}
+
+window.addEventListener(
+    "resize",
+    resize
+);
+
+
+/* =========================
+   키보드
+========================= */
+
+window.addEventListener(
+    "keydown",
+    function(e){
+
+        if(
+
+            e.code==="KeyW"||
+            e.code==="KeyA"||
+            e.code==="KeyS"||
+            e.code==="KeyD"||
+
+            e.code==="ArrowUp"||
+            e.code==="ArrowDown"||
+            e.code==="ArrowLeft"||
+            e.code==="ArrowRight"
+
+        ){
+
+            keys[e.code]=true;
+
+            e.preventDefault();
+
+        }
+
+
+        /*
+         * R = 부활
+         */
+
+        if(
+            e.code==="KeyR" &&
+            game.waitingRevive
+        ){
+
+            revivePlayer();
+
+            e.preventDefault();
+
+            return;
+
+        }
+
+
+        /*
+         * Space = 재시작
+         */
+
+        if(
+            e.code==="Space" &&
+            !game.running &&
+            !game.waitingRevive
+        ){
+
+            startGame();
+
+            e.preventDefault();
+
+        }
+
+    },
+    {passive:false}
+);
+
+
+window.addEventListener(
+    "keyup",
+    function(e){
+
+        if(
+
+            e.code==="KeyW"||
+            e.code==="KeyA"||
+            e.code==="KeyS"||
+            e.code==="KeyD"||
+
+            e.code==="ArrowUp"||
+            e.code==="ArrowDown"||
+            e.code==="ArrowLeft"||
+            e.code==="ArrowRight"
+
+        ){
+
+            keys[e.code]=false;
+
+            e.preventDefault();
+
+        }
+
+    },
+    {passive:false}
+);
+
+
+window.addEventListener(
+    "blur",
+    function(){
+
+        for(
+            const key in keys
+        ){
+
+            keys[key]=false;
+
+        }
+
+    }
+);
+
+
+/* =========================
+   플레이어
+========================= */
+
+const player={
+
+    x:0,
+
+    y:0,
+
+    radius:15,
+
+    speed:350,
+
+    reset(){
+
+        this.x=
+            canvas.width/2;
+
+        this.y=
+            canvas.height/2;
+
+    },
+
+    update(dt){
+
+        let dx=0;
+
+        let dy=0;
+
+
+        if(
+            keys.KeyW||
+            keys.ArrowUp
+        ){
+            dy--;
+        }
+
+
+        if(
+            keys.KeyS||
+            keys.ArrowDown
+        ){
+            dy++;
+        }
+
+
+        if(
+            keys.KeyA||
+            keys.ArrowLeft
+        ){
+            dx--;
+        }
+
+
+        if(
+            keys.KeyD||
+            keys.ArrowRight
+        ){
+            dx++;
+        }
+
+
+        if(
+            dx!==0||
+            dy!==0
+        ){
+
+            const length=
+                Math.hypot(dx,dy);
+
+            dx/=length;
+
+            dy/=length;
+
+        }
+
+
+        this.x+=
+            dx*
+            this.speed*
+            dt;
+
+
+        this.y+=
+            dy*
+            this.speed*
+            dt;
+
+
+        this.x=Math.max(
+            this.radius,
+            Math.min(
+                canvas.width-this.radius,
+                this.x
+            )
+        );
+
+
+        this.y=Math.max(
+            this.radius,
+            Math.min(
+                canvas.height-this.radius,
+                this.y
+            )
+        );
+
+    },
+
+
+    draw(){
+
+        ctx.save();
+
+        ctx.translate(
+            this.x,
+            this.y
+        );
+
+
+        /*
+         * 부활 무적 효과
+         */
+
+        if(
+            game.invincible>0
+        ){
+
+            ctx.shadowColor=
+                "rgba(255,220,100,.9)";
+
+            ctx.shadowBlur=25;
+
+        }
+
+
+        /* 그림자 */
+
+        ctx.beginPath();
+
+        ctx.ellipse(
+            0,
+            15,
+            13,
+            5,
+            0,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fillStyle=
+            "rgba(0,0,0,.55)";
+
+        ctx.fill();
+
+
+        /* 몸 */
+
+        ctx.beginPath();
+
+        ctx.roundRect(
+            -10,
+            -1,
+            20,
+            21,
+            8
+        );
+
+
+        const body=
+            ctx.createLinearGradient(
+                0,
+                -2,
+                0,
+                21
+            );
+
+
+        body.addColorStop(
+            0,
+            "#596650"
+        );
+
+        body.addColorStop(
+            1,
+            "#253026"
+        );
+
+
+        ctx.fillStyle=body;
+
+        ctx.fill();
+
+
+        /* 팔 */
+
+        ctx.strokeStyle=
+            "#64735d";
+
+        ctx.lineWidth=5;
+
+        ctx.lineCap="round";
+
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            -7,
+            4
+        );
+
+        ctx.lineTo(
+            -14,
+            10
+        );
+
+        ctx.stroke();
+
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            7,
+            4
+        );
+
+        ctx.lineTo(
+            14,
+            10
+        );
+
+        ctx.stroke();
+
+
+        /* 머리 */
+
+        ctx.beginPath();
+
+        ctx.arc(
+            0,
+            -9,
+            8,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fillStyle=
+            "#c69a68";
+
+        ctx.fill();
+
+
+        /* 머리카락 */
+
+        ctx.beginPath();
+
+        ctx.arc(
+            0,
+            -11,
+            8,
+            Math.PI,
+            Math.PI*2
+        );
+
+        ctx.fillStyle=
+            "#151914";
+
+        ctx.fill();
+
+
+        /* 상투 */
+
+        ctx.beginPath();
+
+        ctx.arc(
+            3,
+            -18,
+            3.5,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fillStyle=
+            "#0b0f0b";
+
+        ctx.fill();
+
+
+        /* 눈 */
+
+        ctx.fillStyle=
+            "#20251d";
+
+
+        ctx.beginPath();
+
+        ctx.arc(
+            -3,
+            -8,
+            1,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+
+
+        ctx.beginPath();
+
+        ctx.arc(
+            3,
+            -8,
+            1,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+
+
+        /* 허리띠 */
+
+        ctx.fillStyle=
+            "#d0ae54";
+
+
+        ctx.beginPath();
+
+        ctx.roundRect(
+            -10,
+            5,
+            20,
+            3,
+            2
+        );
+
+        ctx.fill();
+
+
+        /* 다리 */
+
+        ctx.strokeStyle=
+            "#253025";
+
+        ctx.lineWidth=5;
+
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            -4,
+            17
+        );
+
+        ctx.lineTo(
+            -6,
+            22
+        );
+
+        ctx.stroke();
+
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            4,
+            17
+        );
+
+        ctx.lineTo(
+            6,
+            22
+        );
+
+        ctx.stroke();
+
+
+        ctx.restore();
+
+    }
+
+};
+
+
+/* =========================
+   화살 속도
+   기존보다 5% 증가
+========================= */
+
+function getArrowSpeed(){
+
+    const level=
+        Math.floor(
+            game.elapsed/3
+        );
+
+
+    return (
+        480+
+        level*45
+    )*1.05;
+
+}
+
+
+/* =========================
+   패턴 간격
+   후반으로 갈수록 짧아짐
+========================= */
+
+function getArrowInterval(){
+
+    const t=
+        game.elapsed;
+
+
+    if(t<5){
+
+        return .72;
+
+    }
+
+
+    if(t<10){
+
+        return .62;
+
+    }
+
+
+    if(t<15){
+
+        return .54;
+
+    }
+
+
+    if(t<20){
+
+        return .47;
+
+    }
+
+
+    if(t<30){
+
+        return .40;
+
+    }
+
+
+    if(t<45){
+
+        return .34;
+
+    }
+
+
+    return .29;
+
+}
+
+
+/* =========================
+   화살
+========================= */
+
+class Arrow{
+
+    constructor(
+        x,
+        y,
+        angle
+    ){
+
+        this.x=x;
+
+        this.y=y;
+
+        this.angle=angle;
+
+        this.speed=
+            getArrowSpeed();
+
+    }
+
+
+    update(dt){
+
+        this.x+=
+            Math.cos(
+                this.angle
+            )*
+            this.speed*
+            dt;
+
+
+        this.y+=
+            Math.sin(
+                this.angle
+            )*
+            this.speed*
+            dt;
+
+    }
+
+
+    outside(){
+
+        return(
+
+            this.x<-100||
+
+            this.x>
+                canvas.width+100||
+
+            this.y<-100||
+
+            this.y>
+                canvas.height+100
+
+        );
+
+    }
+
+
+    collision(){
+
+        const tipX=
+            this.x+
+            Math.cos(
+                this.angle
+            )*27;
+
+
+        const tipY=
+            this.y+
+            Math.sin(
+                this.angle
+            )*27;
+
+
+        const dx=
+            tipX-player.x;
+
+
+        const dy=
+            tipY-player.y;
+
+
+        return(
+
+            dx*dx+
+            dy*dy
+
+        )<
+        21*21;
+
+    }
+
+
+    draw(){
+
+        ctx.save();
+
+
+        ctx.translate(
+            this.x,
+            this.y
+        );
+
+
+        ctx.rotate(
+            this.angle
+        );
+
+
+        /* 화살대 */
+
+        const shaft=
+            ctx.createLinearGradient(
+                -28,
+                0,
+                24,
+                0
+            );
+
+
+        shaft.addColorStop(
+            0,
+            "#56371b"
+        );
+
+
+        shaft.addColorStop(
+            .3,
+            "#9b6935"
+        );
+
+
+        shaft.addColorStop(
+            .55,
+            "#c99a59"
+        );
+
+
+        shaft.addColorStop(
+            .8,
+            "#865629"
+        );
+
+
+        shaft.addColorStop(
+            1,
+            "#4b3018"
+        );
+
+
+        ctx.fillStyle=shaft;
+
+
+        ctx.fillRect(
+            -28,
+            -.9,
+            52,
+            1.8
+        );
+
+
+        /* 화살촉 */
+
+        const metal=
+            ctx.createLinearGradient(
+                14,
+                -3.5,
+                32,
+                3.5
+            );
+
+
+        metal.addColorStop(
+            0,
+            "#66665f"
+        );
+
+
+        metal.addColorStop(
+            .35,
+            "#c8c8bd"
+        );
+
+
+        metal.addColorStop(
+            .55,
+            "#f1f0e6"
+        );
+
+
+        metal.addColorStop(
+            1,
+            "#5b5b55"
+        );
+
+
+        ctx.fillStyle=metal;
+
+
+        ctx.beginPath();
+
+
+        ctx.moveTo(
+            32,
+            0
+        );
+
+
+        ctx.lineTo(
+            19,
+            -3.5
+        );
+
+
+        ctx.lineTo(
+            22,
+            0
+        );
+
+
+        ctx.lineTo(
+            19,
+            3.5
+        );
+
+
+        ctx.closePath();
+
+
+        ctx.fill();
+
+
+        /* 중앙 */
+
+        ctx.strokeStyle=
+            "rgba(255,255,255,.5)";
+
+        ctx.lineWidth=.45;
+
+
+        ctx.beginPath();
+
+
+        ctx.moveTo(
+            32,
+            0
+        );
+
+
+        ctx.lineTo(
+            21,
+            0
+        );
+
+
+        ctx.stroke();
+
+
+        /* 깃털 */
+
+        ctx.fillStyle=
+            "#ddd8c6";
+
+
+        ctx.beginPath();
+
+
+        ctx.moveTo(
+            -27,
+            0
+        );
+
+
+        ctx.quadraticCurveTo(
+            -32,
+            -3.5,
+            -38,
+            -3.5
+        );
+
+
+        ctx.quadraticCurveTo(
+            -35,
+            0,
+            -38,
+            3.5
+        );
+
+
+        ctx.quadraticCurveTo(
+            -32,
+            3.5,
+            -27,
+            0
+        );
+
+
+        ctx.closePath();
+
+
+        ctx.fill();
+
+
+        ctx.restore();
+
+    }
+
+}
+
+
+/* =========================
+   화살 생성
+========================= */
+
+function spawn(
+    x,
+    y,
+    angle
+){
+
+    game.arrows.push(
+        new Arrow(
+            x,
+            y,
+            angle
+        )
+    );
+
+}
+
+
+/* =========================
+   화면 가장자리
+========================= */
+
+function edge(){
+
+    const side=
+        Math.floor(
+            Math.random()*4
+        );
+
+
+    const margin=75;
+
+
+    if(side===0){
+
+        return{
+            x:Math.random()*
+                canvas.width,
+
+            y:-margin
+        };
+
+    }
+
+
+    if(side===1){
+
+        return{
+            x:canvas.width+margin,
+
+            y:Math.random()*
+                canvas.height
+        };
+
+    }
+
+
+    if(side===2){
+
+        return{
+            x:Math.random()*
+                canvas.width,
+
+            y:canvas.height+margin
+        };
+
+    }
+
+
+    return{
+
+        x:-margin,
+
+        y:Math.random()*
+            canvas.height
+
+    };
+
+}
+
+
+/* =========================
+   조준
+========================= */
+
+function aim(
+    x,
+    y
+){
+
+    return Math.atan2(
+        player.y-y,
+        player.x-x
+    );
+
+}
+
+
+/* =========================
+   기본 패턴
+========================= */
+
+function single(){
+
+    const p=edge();
+
+
+    spawn(
+        p.x,
+        p.y,
+        aim(
+            p.x,
+            p.y
+        )
+    );
+
+}
+
+
+/* =========================
+   일자
+========================= */
+
+function line(){
+
+    const side=
+        Math.floor(
+            Math.random()*4
+        );
+
+
+    const count=7;
+
+    const gap=88;
+
+
+    for(
+        let i=0;
+        i<count;
+        i++
+    ){
+
+        const offset=
+            (
+                i-
+                (count-1)/2
+            )*gap;
+
+
+        if(side===0){
+
+            spawn(
+                canvas.width/2+
+                    offset,
+                -70,
+                Math.PI/2
+            );
+
+        }
+
+        else if(side===1){
+
+            spawn(
+                canvas.width+70,
+                canvas.height/2+
+                    offset,
+                Math.PI
+            );
+
+        }
+
+        else if(side===2){
+
+            spawn(
+                canvas.width/2+
+                    offset,
+                canvas.height+70,
+                -Math.PI/2
+            );
+
+        }
+
+        else{
+
+            spawn(
+                -70,
+                canvas.height/2+
+                    offset,
+                0
+            );
+
+        }
+
+    }
+
+}
+
+
+/* =========================
+   대각선
+   양쪽에서 총 2발
+========================= */
+
+function diagonal(){
+
+    const m=70;
+
+
+    const side=
+        Math.random()<.5;
+
+
+    if(side){
+
+        spawn(
+            -m,
+            -m,
+            Math.PI/4
+        );
+
+
+        spawn(
+            canvas.width+m,
+            canvas.height+m,
+            5*Math.PI/4
+        );
+
+    }
+
+    else{
+
+        spawn(
+            canvas.width+m,
+            -m,
+            3*Math.PI/4
+        );
+
+
+        spawn(
+            -m,
+            canvas.height+m,
+            7*Math.PI/4
+        );
+
+    }
+
+}
+
+
+/* =========================
+   부채꼴
+   5발
+   넓게 퍼짐
+========================= */
+
+function fan(){
+
+    const p=edge();
+
+
+    const base=
+        aim(
+            p.x,
+            p.y
+        );
+
+
+    for(
+        let i=-2;
+        i<=2;
+        i++
+    ){
+
+        spawn(
+            p.x,
+            p.y,
+            base+
+            i*.12
+        );
+
+    }
+
+}
+
+
+/* =========================
+   양쪽
+========================= */
+
+function opposite(){
+
+    const y=
+        80+
+        Math.random()*
+        (
+            canvas.height-160
+        );
+
+
+    spawn(
+        -70,
+        y,
+        0
+    );
+
+
+    spawn(
+        canvas.width+70,
+        y,
+        Math.PI
+    );
+
+}
+
+
+/* =========================
+   십자
+========================= */
+
+function cross(){
+
+    const m=70;
+
+
+    spawn(
+        -m,
+        -m,
+        Math.PI/4
+    );
+
+
+    spawn(
+        canvas.width+m,
+        -m,
+        3*Math.PI/4
+    );
+
+
+    spawn(
+        canvas.width+m,
+        canvas.height+m,
+        5*Math.PI/4
+    );
+
+
+    spawn(
+        -m,
+        canvas.height+m,
+        7*Math.PI/4
+    );
+
+}
+
+
+/* =========================
+   폭발
+   8발
+========================= */
+
+function burst(){
+
+    const count=8;
+
+
+    for(
+        let i=0;
+        i<count;
+        i++
+    ){
+
+        const p=edge();
+
+
+        spawn(
+            p.x,
+            p.y,
+            aim(
+                p.x,
+                p.y
+            )
+        );
+
+    }
+
+}
+
+
+/* =========================
+   비
+   7발
+========================= */
+
+function rain(){
+
+    const count=7;
+
+
+    for(
+        let i=0;
+        i<count;
+        i++
+    ){
+
+        const x=
+            (
+                i+.5
+            )*
+            canvas.width/
+            count;
+
+
+        spawn(
+            x,
+            -70,
+            Math.PI/2
+        );
+
+    }
+
+}
+
+
+/* =========================
+   원형
+   8발
+========================= */
+
+function circle(){
+
+    const cx=
+        canvas.width/2;
+
+
+    const cy=
+        canvas.height/2;
+
+
+    const radius=
+        Math.max(
+            canvas.width,
+            canvas.height
+        )*.65;
+
+
+    const count=8;
+
+
+    for(
+        let i=0;
+        i<count;
+        i++
+    ){
+
+        const angle=
+            i*
+            Math.PI*
+            2/
+            count;
+
+
+        spawn(
+
+            cx+
+            Math.cos(angle)*
+            radius,
+
+            cy+
+            Math.sin(angle)*
+            radius,
+
+            angle+
+            Math.PI
+
+        );
+
+    }
+
+}
+
+
+/* =========================
+   패턴 선택
+========================= */
+
+function createPattern(){
+
+    const t=
+        game.elapsed;
+
+
+    let pattern;
+
+    let isSpecial=false;
+
+
+    /*
+     * 0~3초
+     * 기본만
+     */
+
+    if(t<3){
+
+        pattern=single;
+
+    }
+
+
+    /*
+     * 3~8초
+     * 기본 패턴 비중 높음
+     */
+
+    else if(t<8){
+
+        const list=[
+
+            single,
+            single,
+            line,
+            diagonal
+
+        ];
+
+
+        pattern=
+            list[
+                Math.floor(
+                    Math.random()*
+                    list.length
+                )
+            ];
+
+    }
+
+
+    /*
+     * 8~15초
+     */
+
+    else if(t<15){
+
+        const list=[
+
+            single,
+            single,
+            single,
+
+            line,
+
+            diagonal,
+
+            opposite,
+
+            rain,
+
+            fan
+
+        ];
+
+
+        pattern=
+            list[
+                Math.floor(
+                    Math.random()*
+                    list.length
+                )
+            ];
+
+
+        isSpecial=
+            pattern!==single;
+
+    }
+
+
+    /*
+     * 15초 이후
+     */
+
+    else{
+
+        const list=[
+
+            single,
+            single,
+            single,
+            single,
+
+            line,
+
+            diagonal,
+
+            opposite,
+
+            rain,
+            rain,
+
+            cross,
+
+            burst,
+
+            circle,
+
+            fan
+
+        ];
+
+
+        pattern=
+            list[
+                Math.floor(
+                    Math.random()*
+                    list.length
+                )
+            ];
+
+
+        isSpecial=
+            pattern!==single;
+
+    }
+
+
+    /*
+     * 특수 패턴 반복 방지
+     *
+     * 기본 패턴은 예외
+     */
+
+    if(
+
+        isSpecial &&
+
+        pattern===game.lastSpecialPattern
+
+    ){
+
+        const alternatives=[
+
+            line,
+            diagonal,
+            opposite,
+            rain,
+            cross,
+            burst,
+            circle,
+            fan
+
+        ];
+
+
+        /*
+         * 직전 패턴과 다른 패턴만 선택
+         */
+
+        const filtered=
+            alternatives.filter(
+                p=>
+                    p!==game.lastSpecialPattern
+            );
+
+
+        pattern=
+            filtered[
+                Math.floor(
+                    Math.random()*
+                    filtered.length
+                )
+            ];
+
+    }
+
+
+    /*
+     * 현재 선택한 패턴 기록
+     */
+
+    if(pattern!==single){
+
+        game.lastSpecialPattern=
+            pattern;
+
+    }
+
+
+    /*
+     * 패턴 실행
+     */
+
+    pattern();
+
+}
+
+
+/* =========================
+   대나무 숲
+========================= */
+
+function bambooForest(
+    spacing,
+    scale,
+    alpha
+){
+
+    const w=
+        canvas.width;
+
+    const h=
+        canvas.height;
+
+
+    const count=
+        Math.ceil(
+            w/spacing
+        )+5;
+
+
+    for(
+        let i=-3;
+        i<count;
+        i++
+    ){
+
+        const x=
+            i*spacing+
+            Math.sin(
+                i*2.37
+            )*25;
+
+
+        const height=
+            h*
+            (
+                .65+
+                (
+                    Math.sin(
+                        i*1.73
+                    )+1
+                )*.13
+            );
+
+
+        const width=
+            10*scale;
+
+
+        ctx.save();
+
+
+        ctx.translate(
+            x,
+            h
+        );
+
+
+        ctx.rotate(
+            Math.sin(
+                i*1.37
+            )*.045
+        );
+
+
+        const bamboo=
+            ctx.createLinearGradient(
+                -width,
+                0,
+                width,
+                0
+            );
+
+
+        bamboo.addColorStop(
+            0,
+            `rgba(8,35,15,${alpha})`
+        );
+
+
+        bamboo.addColorStop(
+            .45,
+            `rgba(42,95,42,${alpha})`
+        );
+
+
+        bamboo.addColorStop(
+            .65,
+            `rgba(68,120,55,${alpha})`
+        );
+
+
+        bamboo.addColorStop(
+            1,
+            `rgba(7,30,13,${alpha})`
+        );
+
+
+        ctx.fillStyle=bamboo;
+
+
+        ctx.fillRect(
+            -width/2,
+            -height,
+            width,
+            height
+        );
+
+
+        ctx.fillStyle=
+            `rgba(5,25,10,${alpha})`;
+
+
+        for(
+            let y=-45;
+            y>-height;
+            y-=52
+        ){
+
+            ctx.fillRect(
+                -width/2-1,
+                y,
+                width+2,
+                3
+            );
+
+        }
+
+
+        ctx.strokeStyle=
+            `rgba(
+                70,
+                120,
+                58,
+                ${alpha*.75}
+            )`;
+
+
+        ctx.lineWidth=
+            Math.max(
+                1,
+                2*scale
+            );
+
+
+        ctx.lineCap="round";
+
+
+        for(
+            let j=0;
+            j<4;
+            j++
+        ){
+
+            const yy=
+                -height*.25-
+                j*height*.15;
+
+
+            ctx.beginPath();
+
+
+            ctx.moveTo(
+                0,
+                yy
+            );
+
+
+            ctx.quadraticCurveTo(
+                -25*scale,
+                yy-12,
+                -38*scale,
+                yy-3
+            );
+
+
+            ctx.stroke();
+
+
+            ctx.beginPath();
+
+
+            ctx.moveTo(
+                0,
+                yy-7
+            );
+
+
+            ctx.quadraticCurveTo(
+                25*scale,
+                yy-22,
+                39*scale,
+                yy-10
+            );
+
+
+            ctx.stroke();
+
+        }
+
+
+        ctx.restore();
+
+    }
+
+}
+
+
+/* =========================
+   배경
+========================= */
+
+function drawBackground(){
+
+    const w=
+        canvas.width;
+
+    const h=
+        canvas.height;
+
+
+    const bg=
+        ctx.createLinearGradient(
+            0,
+            0,
+            0,
+            h
+        );
+
+
+    bg.addColorStop(
+        0,
+        "#06130c"
+    );
+
+
+    bg.addColorStop(
+        .45,
+        "#10351e"
+    );
+
+
+    bg.addColorStop(
+        .78,
+        "#082414"
+    );
+
+
+    bg.addColorStop(
+        1,
+        "#020804"
+    );
+
+
+    ctx.fillStyle=bg;
+
+
+    ctx.fillRect(
+        0,
+        0,
+        w,
+        h
+    );
+
+
+    /* 달빛 */
+
+    const moon=
+        ctx.createRadialGradient(
+            w*.72,
+            h*.22,
+            0,
+            w*.72,
+            h*.22,
+            h*.35
+        );
+
+
+    moon.addColorStop(
+        0,
+        "rgba(220,235,180,.14)"
+    );
+
+
+    moon.addColorStop(
+        .35,
+        "rgba(150,190,120,.05)"
+    );
+
+
+    moon.addColorStop(
+        1,
+        "rgba(0,0,0,0)"
+    );
+
+
+    ctx.fillStyle=moon;
+
+
+    ctx.fillRect(
+        0,
+        0,
+        w,
+        h
+    );
+
+
+    bambooForest(
+        105,
+        .25,
+        .25
+    );
+
+
+    bambooForest(
+        82,
+        .42,
+        .38
+    );
+
+
+    bambooForest(
+        62,
+        .65,
+        .55
+    );
+
+
+    bambooForest(
+        48,
+        .9,
+        .78
+    );
+
+
+    /* 안개 */
+
+    const fog=
+        ctx.createLinearGradient(
+            0,
+            h*.45,
+            0,
+            h
+        );
+
+
+    fog.addColorStop(
+        0,
+        "rgba(90,130,90,0)"
+    );
+
+
+    fog.addColorStop(
+        .6,
+        "rgba(110,145,105,.06)"
+    );
+
+
+    fog.addColorStop(
+        1,
+        "rgba(130,160,120,.11)"
+    );
+
+
+    ctx.fillStyle=fog;
+
+
+    ctx.fillRect(
+        0,
+        h*.45,
+        w,
+        h*.55
+    );
+
+
+    /* CODE */
+
+    ctx.save();
+
+
+    ctx.textAlign="center";
+
+    ctx.textBaseline="middle";
+
+
+    ctx.font=
+        "bold "+
+        Math.min(
+            w*.17,
+            180
+        )+
+        "px Georgia";
+
+
+    ctx.shadowColor=
+        "rgba(230,190,70,.25)";
+
+
+    ctx.shadowBlur=35;
+
+
+    ctx.fillStyle=
+        "rgba(230,190,70,.045)";
+
+
+    ctx.fillText(
+        "CODE",
+        w/2,
+        h/2
+    );
+
+
+    ctx.restore();
+
+
+    /* 비네팅 */
+
+    const vignette=
+        ctx.createRadialGradient(
+            w/2,
+            h/2,
+            h*.15,
+            w/2,
+            h/2,
+            Math.max(w,h)*.75
+        );
+
+
+    vignette.addColorStop(
+        0,
+        "rgba(0,0,0,0)"
+    );
+
+
+    vignette.addColorStop(
+        .65,
+        "rgba(0,0,0,.08)"
+    );
+
+
+    vignette.addColorStop(
+        1,
+        "rgba(0,0,0,.62)"
+    );
+
+
+    ctx.fillStyle=vignette;
+
+
+    ctx.fillRect(
+        0,
+        0,
+        w,
+        h
+    );
+
+}
+
+
+/* =========================
+   업데이트
+========================= */
+
+function update(dt){
+
+    /*
+     * 부활 대기 중
+     */
+
+    if(game.waitingRevive){
+
+        game.reviveCountdown-=dt;
+
+
+        if(
+            game.reviveCountdown<=0
+        ){
+
+            returnToLobby();
+
+        }
+
+
+        return;
+
+    }
+
+
+    game.elapsed=
+        (
+            performance.now()-
+            game.startTime
+        )/1000;
+
+
+    player.update(dt);
+
+
+    /*
+     * 무적시간
+     */
+
+    if(
+        game.invincible>0
+    ){
+
+        game.invincible-=dt;
+
+    }
+
+
+    /*
+     * 패턴 타이머
+     */
+
+    game.arrowTimer-=dt;
+
+
+    if(
+        game.arrowTimer<=0
+    ){
+
+        createPattern();
+
+
+        game.arrowTimer=
+            getArrowInterval();
+
+    }
+
+
+    /*
+     * 화살 업데이트
+     */
+
+    for(
+        const arrow of game.arrows
+    ){
+
+        arrow.update(dt);
+
+
+        /*
+         * 무적 중에는 충돌 무시
+         */
+
+        if(
+            game.invincible<=0 &&
+            arrow.collision()
+        ){
+
+            game.flash=.25;
+
+            playerDeath();
+
+            return;
+
+        }
+
+    }
+
+
+    /*
+     * 화면 밖 화살 제거
+     */
+
+    game.arrows=
+        game.arrows.filter(
+            arrow=>
+                !arrow.outside()
+        );
+
+
+    if(
+        game.flash>0
+    ){
+
+        game.flash-=dt*2;
+
+    }
+
+}
+
+
+/* =========================
+   플레이어 사망
+========================= */
+
+function playerDeath(){
+
+    /*
+     * 마지막 사망 위치 저장
+     */
+
+    game.reviveDeadX=
+        player.x;
+
+    game.reviveDeadY=
+        player.y;
+
+
+    /*
+     * 부활 가능 횟수가 남아있으면
+     * 부활 대기
+     */
+
+    if(
+        game.reviveAvailable>0
+    ){
+
+        game.running=false;
+
+        game.waitingRevive=true;
+
+        game.reviveCountdown=3;
+
+
+        reviveCount.textContent=
+            game.reviveCountdown
+            .toFixed(1);
+
+
+        reviveRemain.textContent=
+            "REVIVES LEFT : "+
+            game.reviveAvailable;
+
+
+        reviveScreen.classList.remove(
+            "hidden"
+        );
+
+
+        return;
+
+    }
+
+
+    /*
+     * 부활을 모두 사용했다면
+     * 게임 오버
+     */
+
+    gameOver();
+
+}
+
+
+/* =========================
+   부활
+========================= */
+
+function revivePlayer(){
+
+    if(
+        !game.waitingRevive
+    ){
+
+        return;
+
+    }
+
+
+    if(
+        game.reviveAvailable<=0
+    ){
+
+        return;
+
+    }
+
+
+    /*
+     * 부활 횟수 차감
+     */
+
+    game.reviveAvailable--;
+
+
+    /*
+     * 죽은 위치에서 부활
+     */
+
+    player.x=
+        game.reviveDeadX;
+
+
+    player.y=
+        game.reviveDeadY;
+
+
+    /*
+     * 주변 화살 정리
+     *
+     * 부활 직후 바로 죽는 것을 방지
+     */
+
+    game.arrows=
+        game.arrows.filter(
+            arrow=>{
+
+                const dx=
+                    arrow.x-player.x;
+
+                const dy=
+                    arrow.y-player.y;
+
+                return(
+                    dx*dx+
+                    dy*dy
+                )>
+                140*140;
+
+            }
+        );
+
+
+    /*
+     * 1.5초 무적
+     */
+
+    game.invincible=1.5;
+
+
+    game.waitingRevive=false;
+
+
+    reviveScreen.classList.add(
+        "hidden"
+    );
+
+
+    game.running=true;
+
+
+    game.lastTime=
+        performance.now();
+
+
+    /*
+     * 부활 직후 패턴 간격 확보
+     */
+
+    game.arrowTimer=.55;
+
+
+    canvas.focus();
+
+
+    requestAnimationFrame(
+        gameLoop
+    );
+
+}
+
+
+/* =========================
+   로비로 복귀
+========================= */
+
+function returnToLobby(){
+
+    game.running=false;
+
+    game.waitingRevive=false;
+
+    game.arrows=[];
+
+    game.invincible=0;
+
+    game.elapsed=0;
+
+    game.reviveAvailable=3;
+
+    game.lastSpecialPattern=null;
+
+
+    reviveScreen.classList.add(
+        "hidden"
+    );
+
+
+    gameOverScreen.classList.add(
+        "hidden"
+    );
+
+
+    startScreen.classList.remove(
+        "hidden"
+    );
+
+
+    draw();
+
+}
+
+
+/* =========================
+   게임 오버
+========================= */
+
+function gameOver(){
+
+    game.running=false;
+
+    game.waitingRevive=false;
+
+
+    let best=
+        Number(
+            localStorage.getItem(
+                "code_best"
+            )
+        )||0;
+
+
+    if(
+        game.elapsed>best
+    ){
+
+        best=
+            game.elapsed;
+
+
+        localStorage.setItem(
+            "code_best",
+            best
+        );
+
+    }
+
+
+    finalTime.textContent=
+        game.elapsed.toFixed(2);
+
+
+    bestTime.textContent=
+        best.toFixed(2);
+
+
+    gameOverScreen.classList.remove(
+        "hidden"
+    );
+
+}
+
+
+/* =========================
+   렌더링
+========================= */
+
+function draw(){
+
+    drawBackground();
+
+
+    /*
+     * 화살
+     */
+
+    for(
+        const arrow of game.arrows
+    ){
+
+        arrow.draw();
+
+    }
+
+
+    /*
+     * 플레이어
+     */
+
+    player.draw();
+
+
+    /*
+     * 피격 효과
+     */
+
+    if(
+        game.flash>0
+    ){
+
+        ctx.fillStyle=
+            `rgba(
+                255,
+                220,
+                100,
+                ${game.flash}
+            )`;
+
+
+        ctx.fillRect(
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
+
+    }
+
+
+    /*
+     * 무적 표시
+     */
+
+    if(
+        game.invincible>0 &&
+        game.running
+    ){
+
+        ctx.beginPath();
+
+
+        ctx.arc(
+            player.x,
+            player.y,
+            25+
+            Math.sin(
+                performance.now()*.015
+            )*3,
+            0,
+            Math.PI*2
+        );
+
+
+        ctx.strokeStyle=
+            "rgba(240,210,100,.55)";
+
+
+        ctx.lineWidth=2;
+
+
+        ctx.stroke();
+
+    }
+
+
+    /*
+     * 시간
+     */
+
+    timeText.textContent=
+        game.elapsed.toFixed(2);
+
+
+    /*
+     * 부활 카운트다운
+     */
+
+    if(
+        game.waitingRevive
+    ){
+
+        reviveCount.textContent=
+            Math.max(
+                0,
+                game.reviveCountdown
+            ).toFixed(1);
+
+    }
+
+}
+
+
+/* =========================
+   게임 시작
+========================= */
+
+function startGame(){
+
+    game.running=true;
+
+    game.waitingRevive=false;
+
+    game.elapsed=0;
+
+    game.arrows=[];
+
+    game.arrowTimer=.5;
+
+    game.startTime=
+        performance.now();
+
+    game.lastTime=
+        performance.now();
+
+    game.flash=0;
+
+    game.invincible=0;
+
+    game.reviveAvailable=3;
+
+    game.lastSpecialPattern=null;
+
+
+    player.reset();
+
+
+    startScreen.classList.add(
+        "hidden"
+    );
+
+
+    gameOverScreen.classList.add(
+        "hidden"
+    );
+
+
+    reviveScreen.classList.add(
+        "hidden"
+    );
+
+
+    canvas.focus();
+
+
+    requestAnimationFrame(
+        gameLoop
+    );
+
+}
+
+
+/* =========================
+   게임 루프
+========================= */
+
+function gameLoop(now){
+
+    if(
+        !game.running
+    ){
+
+        return;
+
+    }
+
+
+    const dt=
+        Math.min(
+            (now-game.lastTime)/1000,
+            .05
+        );
+
+
+    game.lastTime=now;
+
+
+    update(dt);
+
+
+    draw();
+
+
+    if(
+        game.running
+    ){
+
+        requestAnimationFrame(
+            gameLoop
+        );
+
+    }
+
+}
+
+
+/* =========================
+   버튼
+========================= */
+
+function startButtonGame(e){
+
+    e.preventDefault();
+
+
+    if(
+        !game.running &&
+        !game.waitingRevive
+    ){
+
+        startGame();
+
+    }
+
+}
+
+
+startButton.addEventListener(
+    "pointerdown",
+    startButtonGame
+);
+
+
+restartButton.addEventListener(
+    "pointerdown",
+    startButtonGame
+);
+
+
+startButton.addEventListener(
+    "click",
+    startButtonGame
+);
+
+
+restartButton.addEventListener(
+    "click",
+    startButtonGame
+);
+
+
+canvas.addEventListener(
+    "pointerdown",
+    function(){
+
+        canvas.focus();
+
+    }
+);
+
+
+/* =========================
+   실행
+========================= */
+
+resize();
+
+player.reset();
+
+draw();
+
+</script>
+
+</body>
+</html>
